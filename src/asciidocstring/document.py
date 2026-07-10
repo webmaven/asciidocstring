@@ -1,7 +1,10 @@
-from typing import Any, List
 import inspect
+from typing import Any, List
+
 from asciidoctrine.lark_parser import parse_to_ast
-from .visitors import TestBlock, TestBlockExtractorVisitor
+
+from .visitors import ReSTSerializerVisitor, TestBlock, TestBlockExtractorVisitor
+
 
 class AsciiDocStringDocument:
     """The main interface representing a parsed AsciiDoc docstring."""
@@ -29,10 +32,12 @@ class AsciiDocStringDocument:
 
     def to_rest(self) -> str:
         """Render parsed ASG into standard reStructuredText."""
-        # Placeholder for Component 4
-        raise NotImplementedError("reST translation is not implemented yet.")
+        visitor = ReSTSerializerVisitor()
+        return visitor.serialize(self.ast)
 
-    def extract_tests(self, language: str = "python", requires_test_marker: bool = False) -> List[TestBlock]:
+    def extract_tests(
+        self, language: str = "python", requires_test_marker: bool = False
+    ) -> List[TestBlock]:
         """Extract executable code blocks from the parsed AST."""
         visitor = TestBlockExtractorVisitor(language, requires_test_marker)
         return visitor.extract(self.ast)

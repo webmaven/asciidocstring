@@ -1,5 +1,5 @@
-import pytest
 import asciidocstring
+
 
 def test_extract_python_source_blocks() -> None:
     # Docstring with python source block and other language

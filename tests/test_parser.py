@@ -1,6 +1,8 @@
 import pytest
+
 import asciidocstring
 from asciidocstring.document import AsciiDocStringDocument
+
 
 def test_indentation_stripping() -> None:
     # A standard raw indented docstring
@@ -13,7 +15,12 @@ def test_indentation_stripping() -> None:
     doc = asciidocstring.parse(raw_docstring)
     assert isinstance(doc, AsciiDocStringDocument)
     # The clean source should be normalized without common leading whitespace
-    assert doc.clean_source == "= Sample Docstring\n\nThis is a paragraph under the docstring.\nIt should have common indentation stripped.\n"
+    expected = (
+        "= Sample Docstring\n\n"
+        "This is a paragraph under the docstring.\n"
+        "It should have common indentation stripped.\n"
+    )
+    assert doc.clean_source == expected
 
 def test_unexpected_eof_prevention() -> None:
     # Under the hood, lark will fail on string ends without a trailing newline
