@@ -1,6 +1,7 @@
 from typing import Any, List
 import inspect
 from asciidoctrine.lark_parser import parse_to_ast
+from .visitors import TestBlock, TestBlockExtractorVisitor
 
 class AsciiDocStringDocument:
     """The main interface representing a parsed AsciiDoc docstring."""
@@ -31,10 +32,10 @@ class AsciiDocStringDocument:
         # Placeholder for Component 4
         raise NotImplementedError("reST translation is not implemented yet.")
 
-    def extract_tests(self, language: str = "python", requires_test_marker: bool = False) -> List[Any]:
+    def extract_tests(self, language: str = "python", requires_test_marker: bool = False) -> List[TestBlock]:
         """Extract executable code blocks from the parsed AST."""
-        # Placeholder for Component 3
-        raise NotImplementedError("Doctest extraction is not implemented yet.")
+        visitor = TestBlockExtractorVisitor(language, requires_test_marker)
+        return visitor.extract(self.ast)
 
 def parse(docstring: str) -> AsciiDocStringDocument:
     """Convenience function to parse a raw python docstring."""
