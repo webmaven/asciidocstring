@@ -45,7 +45,8 @@ def test_extract_interactive_prompts() -> None:
     assert tests[0].is_interactive is True
 
 def test_requires_test_marker_filter() -> None:
-    # Docstring containing both a normal source block and a test-marked source block
+    # Docstring containing both a normal source block and different
+    # test-marked source blocks
     docstring = """
         A non-test block:
         [source,python]
@@ -53,14 +54,16 @@ def test_requires_test_marker_filter() -> None:
         x = 1
         ----
         
-        A test block with role shorthand:
-        [source,python,role="test"]
+        A test block with consecutive independent attribute lines:
+        # (merged role + source)
+        [.test]
+        [source,python]
         ----
         y = 2
         ----
         
-        A test block with role test attribute:
-        [source,python,role="test"]
+        A test block with positional third attribute [source,python,test]:
+        [source,python,test]
         ----
         z = 3
         ----

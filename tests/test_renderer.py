@@ -86,29 +86,13 @@ def test_admonitions_serialization() -> None:
     assert expected_admonition in rest
 
 def test_links_serialization() -> None:
-    from asciidoctrine.nodes import Document, Paragraph, Ref, Text
-    
-    # We construct an AST programmatically to test our visitor's translation of
-    # Ref nodes, keeping the codebase pure and avoiding brittle parser-level
-    # regex fallbacks.
-    doc_node = Document()
-    para_node = Paragraph()
-    
-    ref_node = Ref("link", "http://example.com")
-    ref_node.name = "ref"
-    ref_node.inlines = [Text(value="Example Site")]
-    
-    para_node.inlines = [
-        Text(value="Check out "),
-        ref_node,
-        Text(value=" for more details.")
-    ]
-    doc_node.blocks = [para_node]
-    
-    doc = asciidocstring.parse("")
-    doc.ast = doc_node
-    
+    docstring = """
+        Check out http://example.com[Example Site] for more details.
+        """
+    doc = asciidocstring.parse(docstring)
     rest = doc.to_rest()
+    
     expected_link = "Check out `Example Site <http://example.com>`_ for more details."
     assert expected_link in rest
+
 

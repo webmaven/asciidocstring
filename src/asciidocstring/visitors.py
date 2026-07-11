@@ -39,8 +39,13 @@ class TestBlockExtractorVisitor(NodeVisitor):
             not lang and self.target_language == "python"
         )
         
-        # Sgthand [.test] parsed as 'role': 'test'
-        has_test_marker = ("test" in attrs or attrs.get("role") == "test")
+        # Sgthand [.test] parsed as 'role': 'test', or positional [source,python,test]
+        has_test_marker = (
+            "test" in attrs
+            or attrs.get("role") == "test"
+            or attrs.get("3") == "test"
+            or "test" in attrs.get("positional", [])
+        )
         
         if is_source and is_target_lang:
             if self.requires_test_marker and not has_test_marker:
