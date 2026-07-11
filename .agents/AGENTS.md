@@ -52,5 +52,12 @@ PYTHONPATH=src venv/bin/pytest
 
 # Run static quality checks
 venv/bin/ruff check src/ tests/
-venv/bin/mypy src/
+mypy src/
 ```
+
+---
+
+## 4. Known Upstream Limitations & Parser Details
+
+* **Bare-URL Autolinks (Issue [#76](https://github.com/webmaven/asciidoctrine/issues/76)):** `asciidoctrine` does not yet parse bare URLs (such as `https://google.com` without bracketed labels) as `Ref` nodes; they are currently parsed as plain `Text` nodes. Use bracketed links `https://google.com[Google]` where explicit translation is required.
+
