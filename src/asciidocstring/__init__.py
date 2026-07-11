@@ -1,4 +1,5 @@
 from .document import AsciiDocStringDocument, parse
+from .visitors import TestBlock
 
 __version__ = "0.1.0"
-__all__ = ["parse", "AsciiDocStringDocument"]
+__all__ = ["parse", "AsciiDocStringDocument", "TestBlock"]
