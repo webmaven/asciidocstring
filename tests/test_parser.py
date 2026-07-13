@@ -18,16 +18,15 @@ def test_indentation_stripping() -> None:
     expected = (
         "= Sample Docstring\n\n"
         "This is a paragraph under the docstring.\n"
-        "It should have common indentation stripped.\n"
+        "It should have common indentation stripped."
     )
     assert doc.clean_source == expected
 
-def test_unexpected_eof_prevention() -> None:
-    # Under the hood, lark will fail on string ends without a trailing newline
-    # asciidocstring should ensure a trailing newline is appended
+def test_unexpected_eof_safety() -> None:
+    # Verify that input without a trailing newline parses cleanly and safely
     no_newline = "== Section Header"
     doc = asciidocstring.parse(no_newline)
-    assert doc.clean_source == "== Section Header\n"
+    assert doc.clean_source == "== Section Header"
     assert doc.ast is not None
 
 def test_strict_parsing_errors() -> None:

@@ -1,0 +1,31 @@
+= Changelog
+:toc: left
+
+This document details all notable changes and releases for `asciidocstring`.
+
+== [0.1.0a2] - 2026-07-13
+
+=== Added
+* **Native Footnotes Support**: Integrated complete tracking, referencing, and serialization of anonymous footnotes (`footnote:[...]`) and named footnote references/definitions (`footnoteref:[id, text]`, `footnoteref:[id]`), appending standard reST footnote definitions at the bottom of the rendered document.
+* **Testing Optional Dependencies**: Declared `pytest` and `pytest-cov` under `[project.optional-dependencies]` in `pyproject.toml` so developers can run `pip install -e .[test]` to get the full testing stack.
+* **Coverage Tracking**: Integrated `pytest-cov` and established a baseline test coverage metric.
+
+=== Fixed
+* **Thematic Break Visitor Dispatch**: Renamed `visit_thematicbreak` to `visit_thematic_break` in `ReSTSerializerVisitor` to align with the lowercased AST name `thematic_break` dispatched by `NodeVisitor`, correcting a silent parsing/rendering bug.
+* **Package Entry Documentation**: Resolved documentation gaps by adding package-level docstrings to `src/asciidocstring/__init__.py`.
+
+=== Upgraded
+* Bumped minimum `asciidoctrine` dependency constraint to `v0.1.0a7` in `pyproject.toml`.
+
+=== Metrics
+* Reached **99% total code coverage** across all modules.
+
+---
+
+== [0.1.0a1] - 2026-07-11
+
+=== Added
+* Initial release of `asciidocstring`, a pure-Python, Pyodide-compatible AsciiDoc docstring parsing and rendering utility.
+* **Docstring Preprocessor**: Strips common leading indentation using `inspect.cleandoc` and normalizes trailing lines to prevent Lark EOF errors.
+* **ReST Serialization Visitor**: Recursively translates AsciiDoc docstrings into high-fidelity reStructuredText (reST) compatible with Sphinx. Supports headers, nested lists, definition lists, styled text spans, admonitions, and inline links.
+* **Test Block Extractor Visitor**: Extracts executable code blocks from the docstring ASG. Supports interactive `>>>` prompts and handles both inline/positional test markers.

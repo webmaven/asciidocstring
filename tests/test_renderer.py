@@ -26,14 +26,29 @@ def test_source_listing_serialization() -> None:
         [source,python]
         ----
         x = 42
+
         print(x)
         ----
         """
     doc = asciidocstring.parse(docstring)
     rest = doc.to_rest()
     
-    expected_block = ".. code-block:: python\n\n   x = 42\n   print(x)"
+    expected_block = ".. code-block:: python\n\n   x = 42\n\n   print(x)"
     assert expected_block in rest
+
+
+def test_thematic_break_serialization() -> None:
+    docstring = """
+        Paragraph before.
+        
+        '''
+        
+        Paragraph after.
+        """
+    doc = asciidocstring.parse(docstring)
+    rest = doc.to_rest()
+    
+    assert "Paragraph before.\n\n----\n\nParagraph after." in rest
 
 def test_inline_formatting_serialization() -> None:
     docstring = """
@@ -96,3 +111,19 @@ def test_links_serialization() -> None:
     assert expected_link in rest
 
 
+def test_footnotes_serialization() -> None:
+    docstring = """
+        This is an anonymous footnote footnote:[Anonymous info.].
+        This is a named footnote footnoteref:[fn-id, Named info.].
+        Referencing the named footnote again footnoteref:[fn-id].
+        """
+    doc = asciidocstring.parse(docstring)
+    rest = doc.to_rest()
+    
+    assert "an anonymous footnote [#]_." in rest
+    assert "a named footnote [fn-id]_." in rest
+    assert "the named footnote again [fn-id]_." in rest
+    
+    # Assert definitions are appended at the bottom
+    assert ".. [#] Anonymous info." in rest
+    assert ".. [fn-id] Named info." in rest

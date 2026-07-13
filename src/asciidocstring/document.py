@@ -15,12 +15,8 @@ class AsciiDocStringDocument:
         self.ast = self._parse(self.clean_source)
 
     def _clean(self, source: str) -> str:
-        """Strip common leading indentation and ensure a trailing newline."""
-        cleaned = inspect.cleandoc(source)
-        # Ensure a trailing newline to avoid lark EOF errors
-        if not cleaned.endswith("\n"):
-            cleaned += "\n"
-        return cleaned
+        """Strip common leading indentation from docstrings."""
+        return inspect.cleandoc(source)
 
     def _parse(self, source: str) -> Any:
         """Parse cleaned AsciiDoc using asciidoctrine's Lark parser."""

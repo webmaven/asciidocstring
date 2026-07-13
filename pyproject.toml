@@ -18,8 +18,18 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "asciidoctrine>=0.1.0a3",
+    "asciidoctrine>=0.1.0a7",
     "lark==1.3.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+lint = [
+    "ruff",
+    "mypy",
 ]
 
 [project.urls]

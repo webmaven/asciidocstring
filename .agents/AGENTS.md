@@ -30,7 +30,6 @@ The library processes Python docstrings written in AsciiDoc using a decoupled, t
 
 1. **Parser & Cleaning Layer (`src/asciidocstring/document.py`):**
    * Uses `inspect.cleandoc` to calculate and strip common leading whitespace from docstrings.
-   * Dynamically appends a trailing `\n` to inputs to avoid `lark.exceptions.UnexpectedEOF` (required by `asciidoctrine`).
    * Parses the cleaned text into an Abstract Semantic Graph (ASG) using `asciidoctrine.lark_parser.parse_to_ast()`.
 
 2. **AST Processing & Visitors Layer (`src/asciidocstring/visitors.py`):**
@@ -60,4 +59,26 @@ mypy src/
 ## 4. Known Upstream Limitations & Parser Details
 
 * **Bare-URL Autolinks (Issue [#76](https://github.com/webmaven/asciidoctrine/issues/76)):** `asciidoctrine` does not yet parse bare URLs (such as `https://google.com` without bracketed labels) as `Ref` nodes; they are currently parsed as plain `Text` nodes. Use bracketed links `https://google.com[Google]` where explicit translation is required.
+
+
+---
+
+## 5. Pre-Release Checklist
+
+Before building, packaging, or uploading a new release to PyPI, every agent MUST execute the following checklist:
+
+1. [ ] **Verify Version String**: Check `src/asciidocstring/__init__.py` and ensure `__version__` has been correctly bumped (e.g., `"0.1.0a2"`).
+2. [ ] **Verify Quality Standards**: Run linting and static analysis checks to guarantee no quality errors exist:
+   ```bash
+   venv/bin/ruff check src/ tests/ && venv/bin/mypy src/
+   ```
+3. [ ] **Measure Coverage**: Run the test suite and verify coverage does not regress from our **99%** baseline:
+   ```bash
+   PYTHONPATH=src venv/bin/pytest --cov=src --cov-report=term-missing
+   ```
+4. [ ] **Update Changelog**: Ensure [CHANGELOG.adoc](file:///Users/michaelbernstein/Documents/GitHub/asciidocstring/CHANGELOG.adoc) is fully updated, listing all newly added, fixed, or modified features.
+5. [ ] **Verify Upstream Constraints**: Double-check that [pyproject.toml](file:///Users/michaelbernstein/Documents/GitHub/asciidocstring/pyproject.toml)'s minimum constraints on upstream packages (such as `asciidoctrine`) are correctly set.
+6. [ ] **Build Verification**: Run `hatch build` locally and ensure the source distribution (`.tar.gz`) and wheel (`.whl`) are successfully built with no package definition errors.
+7. [ ] **PyPI Sanity Check**: Verify that the targeted version doesn't conflict with any active (non-yanked) versions on PyPI.
+
 

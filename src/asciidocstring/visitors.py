@@ -82,13 +82,27 @@ class ReSTSerializerVisitor(NodeVisitor):
         self.output: List[str] = []
         self._indent_level = 0
         self._current_list_depth = 0
+        self._footnotes: List[tuple[str | None, List[Any]]] = []
+        self._footnote_ids: set[str] = set()
 
     def serialize(self, node: Any) -> str:
         """Reset state, walk AST, and return reST representation."""
         self.output = []
         self._indent_level = 0
         self._current_list_depth = 0
+        self._footnotes = []
+        self._footnote_ids = set()
         self.visit(node)
+        
+        if self._footnotes:
+            self.output.append("\n")
+            for fn_id, inlines in self._footnotes:
+                content = "".join(self.render_inline(sub) for sub in inlines)
+                if fn_id:
+                    self.output.append(f".. [{fn_id}] {content}\n")
+                else:
+                    self.output.append(f".. [#] {content}\n")
+                    
         # Strip excess trailing newlines from end of document
         return "".join(self.output).rstrip() + "\n"
 
@@ -106,9 +120,22 @@ class ReSTSerializerVisitor(NodeVisitor):
                 return f"``{content}``"
             return content
         elif node.name == "ref":
-            content = "".join(self.render_inline(sub) for sub in node.inlines)
-            target = getattr(node, "target", "")
-            return f"`{content} <{target}>`_"
+            variant = getattr(node, "variant", "")
+            if variant == "footnote":
+                target = getattr(node, "target", "")
+                if target:
+                    if node.inlines:
+                        if target not in self._footnote_ids:
+                            self._footnote_ids.add(target)
+                            self._footnotes.append((target, node.inlines))
+                    return f"[{target}]_"
+                else:
+                    self._footnotes.append((None, node.inlines))
+                    return "[#]_"
+            else:
+                content = "".join(self.render_inline(sub) for sub in node.inlines)
+                target = getattr(node, "target", "")
+                return f"`{content} <{target}>`_"
         return ""
 
     def visit_document(self, node: Any) -> None:
@@ -229,7 +256,7 @@ class ReSTSerializerVisitor(NodeVisitor):
             self.visit(block)
         self._indent_level = old_indent
 
-    def visit_thematicbreak(self, node: Any) -> None:
+    def visit_thematic_break(self, node: Any) -> None:
         """Render thematic breaks (horizontal lines)."""
         indent = " " * self._indent_level
         self.output.append(f"{indent}----\n\n")
