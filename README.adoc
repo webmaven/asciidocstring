@@ -9,7 +9,7 @@ A semantic parser, extractor, and translator for Python docstrings written in As
 `asciidocstring` is a Python library built on top of the pure-Python `asciidoctrine` parser. It is designed to clean raw docstrings (stripping common indentation) and compile them into a structured Abstract Semantic Graph (ASG). 
 
 This parsed semantic graph can be used by downstream libraries to:
-1. Render high-fidelity reStructuredText for Sphinx (`sphinx-asciidoc`).
+1. Render high-fidelity reStructuredText for Sphinx (`sphinx-asciidoctrine`).
 2. Query and run interactive doctests (`asciidoctest`).
 
 == Installation
