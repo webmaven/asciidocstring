@@ -4,7 +4,13 @@
 :idprefix:
 :idseparator: -
 
-A premium, high-performance, pure-Python semantic parser, extractor, and translator for Python docstrings written in AsciiDoc. Fully compatible with Python 3.14+ and WASM/Pyodide environments with zero native compiled extensions.
+image:https://github.com/webmaven/asciidocstring/actions/workflows/ci.yml/badge.svg[Build Status, link=https://github.com/webmaven/asciidocstring/actions/workflows/ci.yml]
+image:https://img.shields.io/pypi/v/asciidocstring.svg[PyPI Version, link=https://pypi.org/project/asciidocstring/]
+image:https://img.shields.io/pypi/pyversions/asciidocstring.svg[Python Versions, link=https://pypi.org/project/asciidocstring/]
+image:https://img.shields.io/pypi/l/asciidocstring.svg[License, link=https://github.com/webmaven/asciidocstring/blob/main/LICENSE]
+image:https://img.shields.io/badge/coverage-99%25-success[Coverage]
+
+A pure-Python semantic parser, extractor, and translator for Python docstrings written in AsciiDoc. Fully compatible with Python 3.14+ and WASM/Pyodide environments with zero native compiled extensions.
 
 == Introduction
 
@@ -89,6 +95,19 @@ except asciidocstring.AsciiDocStringParseError as e:
     print(e.context)
 ----
 
+Expected output:
+
+[source,text]
+----
+Error Message: AsciiDoc Parse Error: Syntax error at line 3, column 1.
+:: invalid-syntax
+^
+Error Location: Line 3, Column 1
+Caret Preview:
+:: invalid-syntax
+^
+----
+
 == API Reference
 
 === Functions
@@ -111,7 +130,7 @@ except asciidocstring.AsciiDocStringParseError as e:
   ** `is_test` (bool): True if the block has been explicitly marked as a test block.
 
 * `AsciiDocStringParseError` +
-  Raised when parsing of an AsciiDoc docstring fails. Inherits from `ValueError`.
+  Raised when parsing an AsciiDoc docstring fails. Inherits from `ValueError`.
   ** `line` (int | None): The line number of the parsing error.
   ** `column` (int | None): The column number of the parsing error.
   ** `context` (str | None): A visual text block indicating the line of code and a caret highlighting the syntax error position.
