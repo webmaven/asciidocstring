@@ -3,8 +3,8 @@
 and processing Python docstrings written in AsciiDoc.
 """
 
-from .document import AsciiDocStringDocument, parse
+from .document import AsciiDocStringDocument, AsciiDocStringParseError, parse
 from .visitors import TestBlock
 
-__version__ = "0.1.0a2"
-__all__ = ["parse", "AsciiDocStringDocument", "TestBlock"]
+__version__ = "0.1.0a3"
+__all__ = ["parse", "AsciiDocStringDocument", "AsciiDocStringParseError", "TestBlock"]

@@ -32,8 +32,15 @@ def test_unexpected_eof_safety() -> None:
 def test_strict_parsing_errors() -> None:
     # Testing that syntactically invalid input raises descriptive errors
     invalid_syntax = ":: invalid\n"
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(asciidocstring.AsciiDocStringParseError) as exc_info:
          asciidocstring.parse(invalid_syntax)
     # Check that it raised our custom parse exception with context details
     assert "Parse Error" in str(exc_info.value)
+    assert exc_info.value.line == 1
+    assert exc_info.value.column == 1
+
+def test_generic_parsing_errors() -> None:
+    # Passing an invalid type should raise a generic AsciiDocStringParseError
+    with pytest.raises(asciidocstring.AsciiDocStringParseError):
+         asciidocstring.parse(None)  # type: ignore
 

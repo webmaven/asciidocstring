@@ -3,6 +3,20 @@
 
 This document details all notable changes and releases for `asciidocstring`.
 
+== [0.1.0a3] - 2026-07-14
+
+=== Added
+* **Structured Parse Errors**: Exposed our own new structured exception `AsciiDocStringParseError` that wraps `asciidoctrine`'s new `AsciiDocSyntaxError` to detail line and column numbers alongside highlighted caret context.
+* **Unified Preprocessor & Parse Exception Handling**: Centralized all exceptions within the `AsciiDocStringDocument.__init__` constructor, ensuring that any pre-processing, formatting, or parsing failures are caught and wrapped cleanly.
+
+=== Upgraded
+* Bumped minimum `asciidoctrine` dependency constraint to `v0.1.0a8` in `pyproject.toml`.
+
+=== Metrics
+* Maintained **99% total code coverage** (with 100% coverage on the preprocessor and document parsing module).
+
+---
+
 == [0.1.0a2] - 2026-07-13
 
 === Added
