@@ -52,3 +52,28 @@ jobs:
       - name: Run Pytest & Measure Coverage
         run: |
           PYTHONPATH=src pytest --cov=src --cov-report=term-missing
+
+  build:
+    name: Build & Verify Package Distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: "pip"
+
+      - name: Install Build and Twine Tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: Build Package
+        run: python -m build
+
+      - name: Check Package Distribution
+        run: twine check dist/*
+

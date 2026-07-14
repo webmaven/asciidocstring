@@ -1,27 +1,38 @@
 = AsciiDocString
 :toc: left
 :sectnums:
+:idprefix:
+:idseparator: -
 
-A semantic parser, extractor, and translator for Python docstrings written in AsciiDoc.
+A premium, high-performance, pure-Python semantic parser, extractor, and translator for Python docstrings written in AsciiDoc. Fully compatible with Python 3.14+ and WASM/Pyodide environments with zero native compiled extensions.
 
 == Introduction
 
-`asciidocstring` is a Python library built on top of the pure-Python `asciidoctrine` parser. It is designed to clean raw docstrings (stripping common indentation) and compile them into a structured Abstract Semantic Graph (ASG). 
+`asciidocstring` is built on top of the pure-Python `asciidoctrine` parser. It is designed to cleanly process Python docstrings written in AsciiDoc, resolve indentation, and parse them into a lossless Abstract Semantic Graph (ASG).
 
-This parsed semantic graph can be used by downstream libraries to:
-1. Render high-fidelity reStructuredText for Sphinx (`sphinx-asciidoctrine`).
-2. Query and run interactive doctests (`asciidoctest`).
+This parsed semantic representation can be used by downstream libraries to:
+1. Render high-fidelity, Sphinx-compatible reStructuredText (reST) using `sphinx-asciidoctrine`.
+2. Query and extract executable interactive doctest code blocks using `asciidoctest`.
 
 == Installation
+
+Initialize your project and install the library:
 
 [source,bash]
 ----
 pip install asciidocstring
 ----
 
+To install optional developer dependencies (testing and linting tools):
+
+[source,bash]
+----
+pip install "asciidocstring[test,lint]"
+----
+
 == Usage
 
-=== Parsing a Docstring
+=== Quick Start
 
 [source,python]
 ----
@@ -41,13 +52,102 @@ docstring = """
     y (int):: The vertical component
     """
 
+# Parse the raw docstring (automatically cleans leading docstring indentation)
 doc = asciidocstring.parse(docstring)
 
-# Convert to reStructuredText (reST) for Sphinx
-rest_output = doc.to_rest()
+# Translate the docstring into reStructuredText (reST) for Sphinx
+rest_text = doc.to_rest()
+print(rest_text)
 
-# Extract code blocks for doctesting
-tests = doc.extract_tests()
+# Extract code blocks tagged for doctesting
+test_blocks = doc.extract_tests(language="python")
+for block in test_blocks:
+    print(f"Test Code ({block.language}):")
+    print(block.code)
+----
+
+=== Catching Syntax and Parsing Errors
+
+The library includes robust, structured syntax error handling. When parsing syntactically invalid AsciiDoc, an `AsciiDocStringParseError` is raised, detailing the exact location and a visual caret context.
+
+[source,python]
+----
+import asciidocstring
+
+invalid_docstring = """
+    = Sample Header
+    
+    :: invalid-syntax
+    """
+
+try:
+    asciidocstring.parse(invalid_docstring)
+except asciidocstring.AsciiDocStringParseError as e:
+    print(f"Error Message: {e}")
+    print(f"Error Location: Line {e.line}, Column {e.column}")
+    print("Caret Preview:")
+    print(e.context)
+----
+
+== API Reference
+
+=== Functions
+
+* `parse(docstring: str) -> AsciiDocStringDocument` +
+  Convenience function to parse a raw Python docstring into a document object.
+
+=== Classes
+
+* `AsciiDocStringDocument` +
+  The main interface representing a parsed docstring document.
+  ** `__init__(raw_source: str)`: Cleans and parses the given docstring.
+  ** `to_rest() -> str`: Renders the parsed document as standard Sphinx-compatible reStructuredText.
+  ** `extract_tests(language: str = "python", requires_test_marker: bool = False) -> list[TestBlock]`: Extracts executable code blocks.
+
+* `TestBlock` +
+  Represents an extracted code block designed for execution or testing.
+  ** `code` (str): The raw code contents of the block.
+  ** `language` (str): The code block language (e.g. `python`).
+  ** `is_test` (bool): True if the block has been explicitly marked as a test block.
+
+* `AsciiDocStringParseError` +
+  Raised when parsing of an AsciiDoc docstring fails. Inherits from `ValueError`.
+  ** `line` (int | None): The line number of the parsing error.
+  ** `column` (int | None): The column number of the parsing error.
+  ** `context` (str | None): A visual text block indicating the line of code and a caret highlighting the syntax error position.
+
+== Developer Guide
+
+Ensure you have your environment set up and dependencies installed:
+
+[source,bash]
+----
+# Set up a virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install the package in editable mode with development dependencies
+pip install -e ".[test,lint]"
+----
+
+=== Running Tests
+We maintain 100% test coverage standards. To run tests and generate a coverage report:
+
+[source,bash]
+----
+PYTHONPATH=src pytest --cov=src --cov-report=term-missing
+----
+
+=== Static Analysis
+Run our linting and type-safety check pipeline:
+
+[source,bash]
+----
+# Run Ruff code format and quality checks
+ruff check src/ tests/
+
+# Run MyPy type-safety validation
+mypy src/
 ----
 
 == License
