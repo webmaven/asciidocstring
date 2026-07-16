@@ -72,7 +72,8 @@ def test_safe_parsing_mode() -> None:
     # Check that visual caret pointer points to first character of ":: invalid"
     assert "^" in serialized
 
-    # Testing that general Exception with safe_mode=True also emits warning and falls back
+    # Testing that general Exception with safe_mode=True
+    # also emits warning and falls back
     with pytest.warns(asciidocstring.AsciiDocStringWarning) as record:
         doc2 = asciidocstring.parse(None, safe_mode=True)  # type: ignore
     assert len(record) == 1
