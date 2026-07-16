@@ -7,15 +7,17 @@ from asciidoctrine.nodes import Listing, NodeVisitor
 @dataclass
 class TestBlock:
     """Represents an executable code block extracted from a docstring."""
+
     content: str
     language: str
     line_number: int
     is_interactive: bool  # True if it contains ">>> " style prompts
     attributes: Dict[str, Any]
 
+
 class TestBlockExtractorVisitor(NodeVisitor):
     """AST visitor to locate and extract Python test blocks from a docstring."""
-    
+
     def __init__(self, target_language: str, requires_test_marker: bool):
         self.target_language = target_language.lower()
         self.requires_test_marker = requires_test_marker
@@ -32,13 +34,13 @@ class TestBlockExtractorVisitor(NodeVisitor):
         attrs = node.attributes or {}
         style = attrs.get("style", "")
         lang = attrs.get("language", "").lower()
-        
+
         # A Listing node with style='source' represents a source code block
-        is_source = (style == "source" or node.name == "listing")
+        is_source = style == "source" or node.name == "listing"
         is_target_lang = (lang == self.target_language) or (
             not lang and self.target_language == "python"
         )
-        
+
         # Sgthand [.test] parsed as 'role': 'test', or positional [source,python,test]
         has_test_marker = (
             "test" in attrs
@@ -46,38 +48,39 @@ class TestBlockExtractorVisitor(NodeVisitor):
             or attrs.get("3") == "test"
             or "test" in attrs.get("positional", [])
         )
-        
+
         if is_source and is_target_lang:
             if self.requires_test_marker and not has_test_marker:
                 return  # Skip since test marker is required but not present
-                
+
             # Extract content from Text inline nodes
             content_parts = [
-                inline.value
-                for inline in node.inlines
-                if hasattr(inline, "value")
+                inline.value for inline in node.inlines if hasattr(inline, "value")
             ]
             content = "".join(content_parts)
-            
+
             # Identify interactive session
             is_interactive = ">>> " in content
-            
+
             # Fetch line numbers from node locations if available
             line_number = 1
             if hasattr(node, "location") and node.location:
                 line_number = node.location[0].get("line", 1)
-                
-            self.extracted_tests.append(TestBlock(
-                content=content,
-                language=lang or self.target_language,
-                line_number=line_number,
-                is_interactive=is_interactive,
-                attributes=attrs
-            ))
+
+            self.extracted_tests.append(
+                TestBlock(
+                    content=content,
+                    language=lang or self.target_language,
+                    line_number=line_number,
+                    is_interactive=is_interactive,
+                    attributes=attrs,
+                )
+            )
+
 
 class ReSTSerializerVisitor(NodeVisitor):
     """AST visitor to serialize parsed AsciiDoc to reStructuredText."""
-    
+
     def __init__(self) -> None:
         self.output: List[str] = []
         self._indent_level = 0
@@ -93,7 +96,7 @@ class ReSTSerializerVisitor(NodeVisitor):
         self._footnotes = []
         self._footnote_ids = set()
         self.visit(node)
-        
+
         if self._footnotes:
             self.output.append("\n")
             for fn_id, inlines in self._footnotes:
@@ -102,7 +105,7 @@ class ReSTSerializerVisitor(NodeVisitor):
                     self.output.append(f".. [{fn_id}] {content}\n")
                 else:
                     self.output.append(f".. [#] {content}\n")
-                    
+
         # Strip excess trailing newlines from end of document
         return "".join(self.output).rstrip() + "\n"
 
@@ -142,12 +145,11 @@ class ReSTSerializerVisitor(NodeVisitor):
         """Render Document header title and traverse block content."""
         if hasattr(node, "header") and node.header and node.header.title:
             title_text = "".join(
-                self.render_inline(inline)
-                for inline in node.header.title.inlines
+                self.render_inline(inline) for inline in node.header.title.inlines
             )
             underline = "=" * len(title_text)
             self.output.append(f"{title_text}\n{underline}\n\n")
-            
+
         for block in node.blocks:
             self.visit(block)
 
@@ -157,14 +159,14 @@ class ReSTSerializerVisitor(NodeVisitor):
         # Underline character mapping: depth 0 is Document (=), depth 1 is Section (-)
         char_map = {0: "=", 1: "-", 2: "~", 3: "^"}
         underline_char = char_map.get(level, "-")
-        
+
         if node.title:
             title_text = "".join(
                 self.render_inline(inline) for inline in node.title.inlines
             )
             underline = underline_char * len(title_text)
             self.output.append(f"{title_text}\n{underline}\n\n")
-            
+
         for block in node.blocks:
             self.visit(block)
 
@@ -178,15 +180,15 @@ class ReSTSerializerVisitor(NodeVisitor):
         """Render code block listing using Sphinx-standard code-block directives."""
         attrs = node.attributes or {}
         lang = attrs.get("language", "python")
-        
+
         content_parts = [
             inline.value for inline in node.inlines if hasattr(inline, "value")
         ]
         content = "".join(content_parts)
-        
+
         indent = " " * self._indent_level
         self.output.append(f"{indent}.. code-block:: {lang}\n\n")
-        
+
         body_indent = " " * (self._indent_level + 3)
         indented_lines = []
         for line in content.splitlines():
@@ -201,23 +203,23 @@ class ReSTSerializerVisitor(NodeVisitor):
         """Render bullets and handle list level nesting contexts."""
         old_depth = self._current_list_depth
         self._current_list_depth += 1
-        
+
         for item in node.items:
             self.visit(item)
-            
+
         self._current_list_depth = old_depth
 
     def visit_listitem(self, node: Any) -> None:
         """Render standard bullet item formatting."""
         indent_size = (self._current_list_depth - 1) * 2
         indent = " " * indent_size
-        
+
         content = ""
         if hasattr(node, "principal") and node.principal:
             content = "".join(self.render_inline(inline) for inline in node.principal)
-            
+
         self.output.append(f"{indent}* {content}\n")
-        
+
         # Render nested block children under this item
         old_indent = self._indent_level
         self._indent_level += indent_size + 2
@@ -235,7 +237,7 @@ class ReSTSerializerVisitor(NodeVisitor):
         for term in node.terms:
             term_text = "".join(self.render_inline(inline) for inline in term.inlines)
             self.output.append(f"{term_text}\n")
-            
+
         old_indent = self._indent_level
         # reST standard definition block is indented by 3 spaces
         self._indent_level += 3
@@ -246,10 +248,10 @@ class ReSTSerializerVisitor(NodeVisitor):
     def visit_admonition(self, node: Any) -> None:
         """Render standard admonition blocks (e.g. note, warning, tip)."""
         variant = getattr(node, "variant", "note").lower()
-        
+
         indent = " " * self._indent_level
         self.output.append(f"{indent}.. {variant}::\n\n")
-        
+
         old_indent = self._indent_level
         self._indent_level += 3
         for block in node.blocks:

@@ -3,6 +3,19 @@
 
 This document details all notable changes and releases for `asciidocstring`.
 
+== [0.1.0a4] - 2026-07-16
+
+=== Added
+* **Safe Parsing Mode**: Introduced a `safe_mode` parameter to `parse()` and `AsciiDocStringDocument`. When `safe_mode=True`, syntax errors and general parsing failures emit a non-blocking `AsciiDocStringWarning` and return a rich structured fallback AST.
+* **Inline Caret Fallback**: The fallback warning AST compiles to a standard Sphinx-compatible `.. warning::` admonition block enclosing a pre-formatted `.. code-block:: asciidoc` block with a dynamically inserted caret cursor pointing to the exact column of the syntax error.
+* **API Warning Class**: Exposed `AsciiDocStringWarning` at the package-level.
+
+=== Fixed
+* **TestBlock Documentation Mismatch**: Aligned attributes of the `TestBlock` class documented in `README.adoc` with the real implementation (`content`, `language`, `line_number`, `is_interactive`, `attributes`).
+* **Quick Start Sample**: Corrected reference from non-existent `block.code` to `block.content` in the documentation's quick start example.
+
+---
+
 == [0.1.0a3] - 2026-07-14
 
 === Added

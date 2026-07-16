@@ -69,7 +69,7 @@ print(rest_text)
 test_blocks = doc.extract_tests(language="python")
 for block in test_blocks:
     print(f"Test Code ({block.language}):")
-    print(block.code)
+    print(block.content)
 ----
 
 === Catching Syntax and Parsing Errors
@@ -108,32 +108,73 @@ Caret Preview:
 ^
 ----
 
+=== Safe Mode Parsing & Warnings
+
+By default, syntax violations raise an exception and halt Sphinx builds. To allow documentation to compile successfully even if a docstring contains syntax errors, you can enable `safe_mode`:
+
+[source,python]
+----
+import asciidocstring
+
+invalid_docstring = """
+    = Sample Header
+    
+    :: invalid-syntax
+    """
+
+# Parse in safe mode (emits a non-blocking AsciiDocStringWarning)
+doc = asciidocstring.parse(invalid_docstring, safe_mode=True)
+
+# Generates a standard warning admonition containing the error and careted source
+print(doc.to_rest())
+----
+
+Output:
+
+[source,text]
+----
+.. warning::
+   Failed to parse AsciiDoc docstring: AsciiDoc Parse Error: Syntax error at line 3, column 1.
+
+   .. code-block:: asciidoc
+
+      = Sample Header
+      
+      :: invalid-syntax
+      ^
+----
+
 == API Reference
 
 === Functions
 
-* `parse(docstring: str) -> AsciiDocStringDocument` +
-  Convenience function to parse a raw Python docstring into a document object.
+* `parse(docstring: str, safe_mode: bool = False) -> AsciiDocStringDocument` +
+  Convenience function to parse a raw Python docstring.
 
 === Classes
 
 * `AsciiDocStringDocument` +
   The main interface representing a parsed docstring document.
-  ** `__init__(raw_source: str)`: Cleans and parses the given docstring.
+  ** `__init__(raw_source: str, safe_mode: bool = False)`: Cleans and parses the given docstring.
   ** `to_rest() -> str`: Renders the parsed document as standard Sphinx-compatible reStructuredText.
   ** `extract_tests(language: str = "python", requires_test_marker: bool = False) -> list[TestBlock]`: Extracts executable code blocks.
 
 * `TestBlock` +
   Represents an extracted code block designed for execution or testing.
-  ** `code` (str): The raw code contents of the block.
+  ** `content` (str): The raw code contents of the block.
   ** `language` (str): The code block language (e.g. `python`).
-  ** `is_test` (bool): True if the block has been explicitly marked as a test block.
+  ** `line_number` (int): The 1-based starting line number of the block in the docstring.
+  ** `is_interactive` (bool): True if the block contains python-interactive prompts (`>>> `).
+  ** `attributes` (dict): A dictionary of raw block attributes parsed from the AsciiDoc metadata.
 
 * `AsciiDocStringParseError` +
   Raised when parsing an AsciiDoc docstring fails. Inherits from `ValueError`.
   ** `line` (int | None): The line number of the parsing error.
   ** `column` (int | None): The column number of the parsing error.
   ** `context` (str | None): A visual text block indicating the line of code and a caret highlighting the syntax error position.
+
+* `AsciiDocStringWarning` +
+  Warning raised when parsing fails under `safe_mode=True`. Inherits from `UserWarning`.
 
 == Developer Guide
 
