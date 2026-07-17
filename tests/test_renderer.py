@@ -95,6 +95,34 @@ def test_description_lists_serialization() -> None:
     assert expected_param2 in rest
 
 
+def test_consecutive_multiline_description_lists_serialization() -> None:
+    docstring = """
+        base_dir::
+          The base directory for resolving include paths.
+          Defaults to the current working directory.
+        safe_mode::
+          If True, prevents including files outside base_dir.
+        """
+    doc = asciidocstring.parse(docstring)
+    rest = doc.to_rest()
+
+    expected = (
+        "base_dir\n"
+        "   The base directory for resolving include paths.\n"
+        "   Defaults to the current working directory.\n"
+        "\n"
+        "safe_mode\n"
+        "   If True, prevents including files outside base_dir."
+    )
+    assert expected in rest
+
+    # Verify that docutils parses it with no unexpected warnings or errors
+    import docutils.core
+    settings = {"warning_stream": None, "halt_level": 2}  # halt_level=2 is WARNING
+    docutils.core.publish_parts(rest, writer_name="html", settings_overrides=settings)
+
+
+
 def test_admonitions_serialization() -> None:
     docstring = """
         WARNING: This is a warning message.
@@ -133,3 +161,43 @@ def test_footnotes_serialization() -> None:
     # Assert definitions are appended at the bottom
     assert ".. [#] Anonymous info." in rest
     assert ".. [fn-id] Named info." in rest
+
+
+def test_description_lists_edge_cases_and_coverage() -> None:
+    from asciidoctrine.nodes import Paragraph, Span, Text
+
+    from asciidocstring.visitors import ReSTSerializerVisitor
+
+    visitor = ReSTSerializerVisitor()
+
+    # Cover line 184: empty line in paragraph
+    p_node = Paragraph(inlines=[Text(value="Line 1\n\nLine 2")])
+    visitor.output = []
+    visitor.visit_paragraph(p_node)
+    assert "Line 1\n\nLine 2" in "".join(visitor.output)
+
+    # Cover line 253: _ensure_blank_line when last_str is empty
+    visitor.output = [""]
+    visitor._ensure_blank_line()
+
+    # Cover line 257: _ensure_blank_line when trailing_newlines == 0
+    visitor.output = ["term"]
+    visitor._ensure_blank_line()
+    assert visitor.output[-1] == "\n\n"
+
+    # Cover line 259: _ensure_blank_line when trailing_newlines == 1
+    visitor.output = ["term\n"]
+    visitor._ensure_blank_line()
+    assert visitor.output[-1] == "\n"
+
+    # Cover line 124: span variant not recognized
+    span_node = Span(variant="unknown", inlines=[Text(value="hello")])
+    res = visitor.render_inline(span_node)
+    assert res == "hello"
+
+    # Cover line 142: unrecognized node name (not text, span, or ref)
+    class UnknownNode:
+        name = "unknown"
+    res = visitor.render_inline(UnknownNode())
+    assert res == ""
+

@@ -3,6 +3,17 @@
 
 This document details all notable changes and releases for `asciidocstring`.
 
+== [0.1.0a5] - 2026-07-17
+
+=== Fixed
+* **Consecutive Definition List Items**: Ensured standard reST formatting by writing exactly one separating blank line between consecutive items in description lists.
+* **Uniform Multi-line Indentation**: Aligned multi-line paragraphs uniformly under nested block structures (e.g. description list definitions), preventing Docutils blockquote parsing errors.
+
+=== Metrics
+* Reached **100% total code coverage** across all library modules.
+
+---
+
 == [0.1.0a4] - 2026-07-16
 
 === Added

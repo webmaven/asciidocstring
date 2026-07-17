@@ -174,7 +174,17 @@ class ReSTSerializerVisitor(NodeVisitor):
         """Render a plain paragraph with the current block level indentation."""
         content = "".join(self.render_inline(inline) for inline in node.inlines)
         indent = " " * self._indent_level
-        self.output.append(f"{indent}{content}\n\n")
+
+        lines = []
+        for line in content.splitlines():
+            stripped = line.strip()
+            if stripped:
+                lines.append(f"{indent}{stripped}")
+            else:
+                lines.append("")
+
+        indented_content = "\n".join(lines)
+        self.output.append(f"{indented_content}\n\n")
 
     def visit_listing(self, node: Any) -> None:
         """Render code block listing using Sphinx-standard code-block directives."""
@@ -232,6 +242,22 @@ class ReSTSerializerVisitor(NodeVisitor):
         for item in node.items:
             self.visit(item)
 
+    def _ensure_blank_line(self) -> None:
+        """Ensure the output ends with exactly one blank line."""
+        last_str = ""
+        for s in reversed(self.output):
+            if s:
+                last_str = s
+                break
+        if not last_str:
+            return
+
+        trailing_newlines = len(last_str) - len(last_str.rstrip("\n"))
+        if trailing_newlines == 0:
+            self.output.append("\n\n")
+        elif trailing_newlines == 1:
+            self.output.append("\n")
+
     def visit_descriptionlistitem(self, node: Any) -> None:
         """Render a single description list item (definition)."""
         for term in node.terms:
@@ -244,6 +270,7 @@ class ReSTSerializerVisitor(NodeVisitor):
         for block in node.blocks:
             self.visit(block)
         self._indent_level = old_indent
+        self._ensure_blank_line()
 
     def visit_admonition(self, node: Any) -> None:
         """Render standard admonition blocks (e.g. note, warning, tip)."""
