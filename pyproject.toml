@@ -26,6 +26,7 @@ dependencies = [
 test = [
     "pytest",
     "pytest-cov",
+    "docutils",
 ]
 lint = [
     "ruff",
