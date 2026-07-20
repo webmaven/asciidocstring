@@ -31,9 +31,6 @@ def test_unexpected_eof_safety() -> None:
     assert doc.ast is not None
 
 
-@pytest.mark.xfail(
-    reason="Upstream issue #85: lark_parser silently swallows syntax errors in 0.1.0a9"
-)
 def test_strict_parsing_errors() -> None:
     # Testing that syntactically invalid input raises descriptive errors
     invalid_syntax = ":: invalid\n"
@@ -52,9 +49,6 @@ def test_generic_parsing_errors() -> None:
         asciidocstring.parse(None)  # type: ignore
 
 
-@pytest.mark.xfail(
-    reason="Upstream issue #85: lark_parser silently swallows syntax errors in 0.1.0a9"
-)
 def test_safe_parsing_mode() -> None:
     # Testing that syntactically invalid input with safe_mode=True
     # emits an AsciiDocStringWarning and returns a warning admonition AST
