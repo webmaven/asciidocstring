@@ -3,6 +3,16 @@
 
 This document details all notable changes and releases for `asciidocstring`.
 
+== [Unreleased]
+
+=== Upgraded
+* Bumped minimum `asciidoctrine` dependency constraint to `v0.1.0a11` in `pyproject.toml`.
+
+=== Fixed
+* **Bare-URL Autolinks**: Bare URLs (e.g. `https://google.com`) are now correctly parsed as `Ref` nodes and rendered as proper reST hyperlinks, thanks to upstream fix in `asciidoctrine` v0.1.0a11 (Issue https://github.com/webmaven/asciidoctrine/issues/76[#76]).
+
+---
+
 == [0.1.0a5] - 2026-07-17
 
 === Fixed

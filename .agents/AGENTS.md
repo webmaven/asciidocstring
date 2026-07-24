@@ -58,7 +58,7 @@ mypy src/
 
 ## 4. Known Upstream Limitations & Parser Details
 
-* **Bare-URL Autolinks (Issue [#76](https://github.com/webmaven/asciidoctrine/issues/76)):** `asciidoctrine` does not yet parse bare URLs (such as `https://google.com` without bracketed labels) as `Ref` nodes; they are currently parsed as plain `Text` nodes. Use bracketed links `https://google.com[Google]` where explicit translation is required.
+* **Bare-URL Autolinks (Issue [#76](https://github.com/webmaven/asciidoctrine/issues/76)):** Resolved in `asciidoctrine>=0.1.0a11`. Bare URLs (such as `https://google.com`) are now correctly parsed as `Ref` nodes and rendered as proper reST hyperlinks.
 
 
 ---
