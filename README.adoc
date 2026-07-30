@@ -1,4 +1,4 @@
-= AsciiDocString
+= AsciiDocstring
 :toc: left
 :sectnums:
 :idprefix:
@@ -14,15 +14,16 @@ A pure-Python semantic parser, extractor, and translator for Python docstrings w
 
 == Introduction
 
-`asciidocstring` is built on top of the pure-Python `asciidoctrine` parser. It is designed to cleanly process Python docstrings written in AsciiDoc, resolve indentation, and parse them into a lossless Abstract Semantic Graph (ASG).
+`asciidocstring` is built on top of the pure-Python https://pypi.org/project/asciidoctrine/[AsciiDoctrine] parser. It is designed to cleanly process Python docstrings written in AsciiDoc, resolve indentation, and parse them into a lossless Abstract Semantic Graph (ASG).
 
 This parsed semantic representation can be used by downstream libraries to:
-1. Render high-fidelity, Sphinx-compatible reStructuredText (reST) using `sphinx-asciidoctrine`.
-2. Query and extract executable interactive doctest code blocks using `asciidoctest`.
+
+1. Render high-fidelity, Sphinx-compatible reStructuredText (reST) using https://pypi.org/project/sphinx-asciidoctrine/[Sphinx-AsciiDoctrine].
+2. Query and extract executable interactive doctest code blocks using https://pypi.org/project/asciidoctest/[AsciiDoctest].
 
 == Installation
 
-Initialize your project and install the library:
+Initialize your project and install the library from https://pypi.org/project/asciidocstring/[PyPI]:
 
 [source,bash]
 ----
