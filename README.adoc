@@ -6,15 +6,55 @@
 
 image:https://github.com/webmaven/asciidocstring/actions/workflows/ci.yml/badge.svg[Build Status, link=https://github.com/webmaven/asciidocstring/actions/workflows/ci.yml]
 image:https://img.shields.io/pypi/v/asciidocstring.svg[PyPI Version, link=https://pypi.org/project/asciidocstring/]
+image:https://img.shields.io/pypi/dm/asciidocstring.svg[PyPI Downloads, link=https://pypi.org/project/asciidocstring/]
 image:https://img.shields.io/pypi/pyversions/asciidocstring.svg[Python Versions, link=https://pypi.org/project/asciidocstring/]
 image:https://img.shields.io/pypi/l/asciidocstring.svg[License, link=https://github.com/webmaven/asciidocstring/blob/main/LICENSE]
 image:https://img.shields.io/badge/coverage-99%25-success[Coverage]
+image:https://img.shields.io/badge/code%20style-ruff-000000.svg[Ruff, link=https://github.com/astral-sh/ruff]
+image:https://img.shields.io/badge/types-mypy-blue.svg[MyPy, link=https://mypy-lang.org/]
+image:https://img.shields.io/badge/Pyodide-WASM%20Ready-6842B2.svg[Pyodide Compatible]
 
 A pure-Python semantic parser, extractor, and translator for Python docstrings written in AsciiDoc. Fully compatible with Python 3.14+ and WASM/Pyodide environments with zero native compiled extensions.
 
-== Introduction
+== Key Features
+
+* *Pure Python & WASM/Pyodide Ready*: Zero C-extensions or native binary dependencies.
+* *Sphinx Integration*: Converts AsciiDoc docstrings into Sphinx-compatible reStructuredText (reST).
+* *Doctest Extraction*: Queries and extracts executable code blocks and interactive prompts (`>>>`).
+* *Safe Mode & Graceful Fallbacks*: Emits non-blocking warnings (`AsciiDocStringWarning`) with visual error carets during Sphinx builds instead of crashing.
+* *Detailed Diagnostics*: Rich exception reporting with precise line, column, and caret context previews on syntax errors.
+
+== Introduction & Architecture
 
 `asciidocstring` is built on top of the pure-Python https://pypi.org/project/asciidoctrine/[AsciiDoctrine] parser. It is designed to cleanly process Python docstrings written in AsciiDoc, resolve indentation, and parse them into a lossless Abstract Semantic Graph (ASG).
+
+[source,text]
+----
+                      ┌─────────────────────────┐
+                      │ Raw AsciiDoc Docstring  │
+                      └────────────┬────────────┘
+                                   │
+                                   ▼
+                      ┌─────────────────────────┐
+                      │  asciidocstring.parse() │
+                      └────────────┬────────────┘
+                                   │
+                                   ▼
+                      ┌─────────────────────────┐
+                      │ Abstract Semantic Graph │
+                      └────────────┬────────────┘
+                                   │
+                 ┌─────────────────┴─────────────────┐
+                 ▼                                   ▼
+   ┌───────────────────────────┐       ┌───────────────────────────┐
+   │       doc.to_rest()       │       │    doc.extract_tests()    │
+   └─────────────┬─────────────┘       └─────────────┬─────────────┘
+                 │                                   │
+                 ▼                                   ▼
+   ┌───────────────────────────┐       ┌───────────────────────────┐
+   │ Sphinx-Compatible reST    │       │ Executable Doctest Blocks │
+   └───────────────────────────┘       └───────────────────────────┘
+----
 
 This parsed semantic representation can be used by downstream libraries to:
 
@@ -71,6 +111,42 @@ test_blocks = doc.extract_tests(language="python")
 for block in test_blocks:
     print(f"Test Code ({block.language}):")
     print(block.content)
+----
+
+=== Translation Comparison (AsciiDoc to reST)
+
+Here is a side-by-side view of how AsciiDoc syntax in a docstring is translated into Sphinx-compatible reStructuredText:
+
+.Input AsciiDoc Docstring
+[source,asciidoc]
+----
+= Parse Coordinates
+
+This function processes dynamic coordinate objects.
+
+NOTE: Coordinates must be non-negative integers.
+
+x (int):: The horizontal component
+y (int):: The vertical component
+----
+
+.Output reStructuredText (reST)
+[source,rst]
+----
+Parse Coordinates
+=================
+
+This function processes dynamic coordinate objects.
+
+.. note::
+
+   Coordinates must be non-negative integers.
+
+x (int)
+   The horizontal component
+
+y (int)
+   The vertical component
 ----
 
 === Catching Syntax and Parsing Errors

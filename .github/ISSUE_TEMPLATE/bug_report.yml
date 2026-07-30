@@ -1,0 +1,49 @@
+name: Bug report
+description: Create a report to help us improve AsciiDocstring
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report a bug in AsciiDocstring!
+  - type: textarea
+    id: describe-bug
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-code
+    attributes:
+      label: Minimal Reproduction Code
+      description: Provide a minimal Python snippet demonstrating the bug.
+      placeholder: |
+        import asciidocstring
+
+        docstring = """
+        = Sample
+        :: invalid
+        """
+        asciidocstring.parse(docstring)
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: A clear description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Python version, AsciiDocstring version, OS, Pyodide/WASM status, etc.
+      placeholder: |
+        - Python version: 3.14.0
+        - AsciiDocstring version: 0.1.0a5
+        - OS: macOS / Linux / WASM
+    validations:
+      required: false
