@@ -3,13 +3,22 @@
 
 This document details all notable changes and releases for `asciidocstring`.
 
-== [Unreleased]
+== [0.1.0a6] - 2026-07-30
 
 === Upgraded
 * Bumped minimum `asciidoctrine` dependency constraint to `v0.1.0a11` in `pyproject.toml`.
 
 === Fixed
 * **Bare-URL Autolinks**: Bare URLs (e.g. `https://google.com`) are now correctly parsed as `Ref` nodes and rendered as proper reST hyperlinks, thanks to upstream fix in `asciidoctrine` v0.1.0a11 (Issue https://github.com/webmaven/asciidoctrine/issues/76[#76]).
+* **AsciiDoc List Spacing**: Corrected AsciiDoc list formatting in `README.adoc` by inserting missing blank lines between paragraphs and list items.
+
+=== Documentation & Community Enhancements
+* **Proper Noun Naming Standardization**: Standardized project name capitalization to **AsciiDocstring** across all documentation when referred to as a proper noun, maintaining lowercased backticked `asciidocstring` for code/module references.
+* **PyPI Metadata Expansion**: Configured complete `[project.urls]` in `pyproject.toml` including `Homepage`, `Documentation`, `Repository`, `Issues`, and `Changelog`.
+* **Badge Suite**: Added PyPI downloads, Ruff code style, MyPy type safety, and Pyodide/WASM readiness badges to `README.adoc`.
+* **Architecture & Features Overview**: Added a Key Features section and ASCII dataflow architecture diagram to `README.adoc`.
+* **Side-by-Side Translation Examples**: Added an AsciiDoc to reST visual comparison table to `README.adoc`.
+* **Community & Governance Infrastructure**: Added `CONTRIBUTING.md`, `SECURITY.md`, and GitHub Issue forms for bug reporting and feature requests (`.github/ISSUE_TEMPLATE/`).
 
 ---
 
