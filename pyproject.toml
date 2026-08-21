@@ -23,10 +23,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+griffe = ["griffe>=1.0.0"]
 test = [
     "pytest",
     "pytest-cov",
     "docutils",
+    "griffe>=1.0.0",
 ]
 lint = [
     "ruff",

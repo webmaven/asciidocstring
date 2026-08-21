@@ -4,7 +4,9 @@ import re
 from typing import Any
 
 from asciidoctrine.nodes import (
+    Admonition,
     DescriptionList,
+    Example,
     Listing,
     NodeVisitor,
     Open,
@@ -134,7 +136,7 @@ class SemanticExtractorVisitor(NodeVisitor):
             type_name=type_name,
             description=desc,
             default=default_val,
-            optional=optional,
+            optional=optional or (default_val is not None),
         )
 
     def _parse_return_term(
@@ -244,6 +246,29 @@ class SemanticExtractorVisitor(NodeVisitor):
         self._current_role = old_role
 
     def visit_open(self, node: Open) -> None:
+        role = self._get_block_role(node)
+        old_role = self._current_role
+        if role:
+            self._seen_semantic_block = True
+            if role == "deprecated":
+                text = self._get_node_text(node)
+                self.deprecated = self._parse_deprecated_block(text)
+                return
+            self._current_role = role
+        self.generic_visit(node)
+        self._current_role = old_role
+
+    def visit_admonition(self, node: Admonition) -> None:
+        variant = getattr(node, "variant", "")
+        role = self._get_block_role(node) or variant
+        if role == "deprecated":
+            self._seen_semantic_block = True
+            text = self._get_node_text(node)
+            self.deprecated = self._parse_deprecated_block(text)
+            return
+        self.generic_visit(node)
+
+    def visit_example(self, node: Example) -> None:
         role = self._get_block_role(node)
         old_role = self._current_role
         if role:

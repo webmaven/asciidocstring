@@ -9,6 +9,7 @@ from .document import (
     AsciiDocStringWarning,
     parse,
 )
+from .griffe_bridge import from_griffe, from_sections, to_asciidoc
 from .models import (
     DocstringAttribute,
     DocstringDeprecated,
@@ -38,4 +39,7 @@ __all__ = [
     "DocstringReturn",
     "DocstringWarn",
     "DocstringYield",
+    "from_griffe",
+    "from_sections",
+    "to_asciidoc",
 ]
