@@ -59,6 +59,7 @@ mypy src/
 ## 4. Known Upstream Limitations & Parser Details
 
 * **Bare-URL Autolinks (Issue [#76](https://github.com/webmaven/asciidoctrine/issues/76)):** Resolved in `asciidoctrine>=0.1.0a11`. Bare URLs (such as `https://google.com`) are now correctly parsed as `Ref` nodes and rendered as proper reST hyperlinks.
+* **Consecutive Attributed Description Lists (Issue [#96](https://github.com/webmaven/asciidoctrine/issues/96)):** Resolved in `asciidoctrine>=0.2.0a2`. Consecutive description lists with distinct block attributes (e.g. `[parameters]`, `[returns]`) are now parsed as distinct `DescriptionList` blocks in the AST and retain their attributes.
 
 
 ---
