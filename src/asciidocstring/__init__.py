@@ -9,6 +9,17 @@ from .document import (
     AsciiDocStringWarning,
     parse,
 )
+from .models import (
+    DocstringAttribute,
+    DocstringDeprecated,
+    DocstringExample,
+    DocstringParam,
+    DocstringRaise,
+    DocstringReceive,
+    DocstringReturn,
+    DocstringWarn,
+    DocstringYield,
+)
 from .visitors import TestBlock
 
 __version__ = "0.1.0a6"
@@ -18,4 +29,13 @@ __all__ = [
     "AsciiDocStringParseError",
     "AsciiDocStringWarning",
     "TestBlock",
+    "DocstringAttribute",
+    "DocstringDeprecated",
+    "DocstringExample",
+    "DocstringParam",
+    "DocstringRaise",
+    "DocstringReceive",
+    "DocstringReturn",
+    "DocstringWarn",
+    "DocstringYield",
 ]

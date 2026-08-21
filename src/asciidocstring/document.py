@@ -1,11 +1,25 @@
 import inspect
 import warnings
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
 from asciidoctrine import AsciiDocSyntaxError
 from asciidoctrine.lark_parser import parse_to_ast
 
+from .models import (
+    DocstringAttribute,
+    DocstringDeprecated,
+    DocstringExample,
+    DocstringParam,
+    DocstringRaise,
+    DocstringReceive,
+    DocstringReturn,
+    DocstringWarn,
+    DocstringYield,
+)
 from .visitors import ReSTSerializerVisitor, TestBlock, TestBlockExtractorVisitor
+
+if TYPE_CHECKING:
+    from .semantics import SemanticExtractorVisitor
 
 
 class AsciiDocStringParseError(ValueError):
@@ -34,6 +48,7 @@ class AsciiDocStringDocument:
     def __init__(self, raw_source: str, safe_mode: bool = False):
         self.raw_source = raw_source
         self.safe_mode = safe_mode
+        self._semantics_cache: Any = None
         try:
             self.clean_source = self._clean(raw_source)
             self.ast = self._parse(self.clean_source)
@@ -112,7 +127,61 @@ class AsciiDocStringDocument:
         visitor = TestBlockExtractorVisitor(language, requires_test_marker)
         return visitor.extract(self.ast)
 
+    @property
+    def semantics(self) -> "SemanticExtractorVisitor":
+        if self._semantics_cache is None:
+            from .semantics import SemanticExtractorVisitor
+
+            visitor = SemanticExtractorVisitor()
+            self._semantics_cache = visitor.extract(self.ast)
+        return self._semantics_cache  # type: ignore[no-any-return]
+
+    @property
+    def summary(self) -> str:
+        return self.semantics.summary
+
+    @property
+    def description(self) -> str:
+        return self.semantics.description
+
+    @property
+    def parameters(self) -> list[DocstringParam]:
+        return self.semantics.parameters
+
+    @property
+    def returns(self) -> list[DocstringReturn]:
+        return self.semantics.returns
+
+    @property
+    def yields(self) -> list[DocstringYield]:
+        return self.semantics.yields
+
+    @property
+    def raises(self) -> list[DocstringRaise]:
+        return self.semantics.raises
+
+    @property
+    def receives(self) -> list[DocstringReceive]:
+        return self.semantics.receives
+
+    @property
+    def warns(self) -> list[DocstringWarn]:
+        return self.semantics.warns
+
+    @property
+    def attributes(self) -> list[DocstringAttribute]:
+        return self.semantics.attributes
+
+    @property
+    def examples(self) -> list[DocstringExample]:
+        return self.semantics.examples
+
+    @property
+    def deprecated(self) -> DocstringDeprecated | None:
+        return self.semantics.deprecated
+
 
 def parse(docstring: str, safe_mode: bool = False) -> AsciiDocStringDocument:
     """Convenience function to parse a raw python docstring."""
     return AsciiDocStringDocument(docstring, safe_mode=safe_mode)
+
