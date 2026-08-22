@@ -34,6 +34,15 @@ lint = [
     "ruff",
     "mypy",
 ]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "docutils",
+    "griffe>=1.0.0",
+    "ruff",
+    "mypy",
+]
+
 
 [project.urls]
 Homepage = "https://pypi.org/project/asciidocstring/"

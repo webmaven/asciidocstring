@@ -17,8 +17,9 @@ from .models import (
     DocstringReturn,
     DocstringWarn,
     DocstringYield,
+    TestBlock,
 )
-from .visitors import ReSTSerializerVisitor, TestBlock, TestBlockExtractorVisitor
+from .visitors import ReSTSerializerVisitor, TestBlockExtractorVisitor
 
 if TYPE_CHECKING:
     from .semantics import SemanticExtractorVisitor
@@ -51,6 +52,7 @@ class AsciiDocStringDocument:
         self.raw_source = raw_source
         self.safe_mode = safe_mode
         self._semantics_cache: Any = None
+        self._parse_failed: bool = False
         try:
             self.clean_source = self._clean(raw_source)
             self.ast = self._parse(self.clean_source)
@@ -74,6 +76,13 @@ class AsciiDocStringDocument:
             else:
                 raise err from e
 
+    def __repr__(self) -> str:
+        status = "parse_failed" if self._parse_failed else "valid"
+        return f"<AsciiDocStringDocument status={status!r} summary={self.summary!r}>"
+
+    def __str__(self) -> str:
+        return self.clean_source
+
     def _clean(self, source: str) -> str:
         """Strip common leading indentation from docstrings."""
         return inspect.cleandoc(source)
@@ -84,6 +93,7 @@ class AsciiDocStringDocument:
 
     def _handle_parse_error(self, err: AsciiDocStringParseError) -> None:
         """Emit warning and fall back to careted admonition warning."""
+        self._parse_failed = True
         warnings.warn(str(err), AsciiDocStringWarning, stacklevel=3)
 
         # Build clean source with caret pointing to syntax error if available
@@ -136,63 +146,88 @@ class AsciiDocStringDocument:
             from .semantics import SemanticExtractorVisitor
 
             visitor = SemanticExtractorVisitor()
-            self._semantics_cache = visitor.extract(self.ast)
+            if not self._parse_failed:
+                visitor.extract(self.ast)
+            self._semantics_cache = visitor
         return self._semantics_cache  # type: ignore[no-any-return]
 
     @property
     def summary(self) -> str:
         """One-line summary (the first paragraph of the docstring)."""
+        if self._parse_failed:
+            return ""
         return self.semantics.summary
 
     @property
     def description(self) -> str:
         """Full extended description of the docstring."""
+        if self._parse_failed:
+            return ""
         return self.semantics.description
 
     @property
     def parameters(self) -> list[DocstringParam]:
         """List of documented parameters extracted from the docstring."""
+        if self._parse_failed:
+            return []
         return self.semantics.parameters
 
     @property
     def returns(self) -> list[DocstringReturn]:
         """List of documented return value specifications."""
+        if self._parse_failed:
+            return []
         return self.semantics.returns
 
     @property
     def yields(self) -> list[DocstringYield]:
         """List of documented yield value specifications."""
+        if self._parse_failed:
+            return []
         return self.semantics.yields
 
     @property
     def raises(self) -> list[DocstringRaise]:
         """List of documented exceptions that may be raised."""
+        if self._parse_failed:
+            return []
         return self.semantics.raises
 
     @property
     def receives(self) -> list[DocstringReceive]:
         """List of documented generator receive specifications."""
+        if self._parse_failed:
+            return []
         return self.semantics.receives
 
     @property
     def warns(self) -> list[DocstringWarn]:
         """List of documented warnings that may be issued."""
+        if self._parse_failed:
+            return []
         return self.semantics.warns
 
     @property
     def attributes(self) -> list[DocstringAttribute]:
         """List of documented class or module attributes."""
+        if self._parse_failed:
+            return []
         return self.semantics.attributes
 
     @property
     def examples(self) -> list[DocstringExample]:
         """List of example and test code blocks extracted from the docstring."""
+        if self._parse_failed:
+            return []
         return self.semantics.examples
 
     @property
     def deprecated(self) -> DocstringDeprecated | None:
         """Deprecation notice if present, otherwise None."""
+        if self._parse_failed:
+            return None
         return self.semantics.deprecated
+
 
 
 def parse(docstring: str, safe_mode: bool = False) -> AsciiDocStringDocument:

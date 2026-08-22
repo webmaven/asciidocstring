@@ -302,3 +302,142 @@ def test_deprecated_version_trailing_punctuation() -> None:
     assert doc2.deprecated is not None
     assert doc2.deprecated.version == "3.1.0"
 
+
+def test_lhs_and_rhs_parameter_type_parsing() -> None:
+    docstring = """
+    Comprehensive parameter term and type parsing.
+
+    [parameters]
+    `x1` (float):: Description for x1
+    `x2` (float, optional):: Description for x2. Defaults to `0.0`.
+    name (type):: Description for name
+    name_opt (type, optional):: Description for name_opt
+    `x`:: (`int`) Description for x.
+    `y`:: (`int`, optional) Description for y.
+    `z` (optional):: Description for z.
+    """
+    doc = asciidocstring.parse(docstring)
+    params = {p.name: p for p in doc.parameters}
+
+    assert len(doc.parameters) == 7
+
+    # LHS typed parameter `x1` (float)
+    assert "x1" in params
+    assert params["x1"].name == "x1"
+    assert params["x1"].type_name == "float"
+    assert params["x1"].optional is False
+    assert params["x1"].description == "Description for x1"
+
+    # LHS typed and optional `x2` (float, optional) with default
+    assert "x2" in params
+    assert params["x2"].name == "x2"
+    assert params["x2"].type_name == "float"
+    assert params["x2"].optional is True
+    assert params["x2"].default == "0.0"
+
+    # Unquoted LHS name (type)
+    assert "name" in params
+    assert params["name"].name == "name"
+    assert params["name"].type_name == "type"
+    assert params["name"].optional is False
+    assert params["name"].description == "Description for name"
+
+    # Unquoted LHS name_opt (type, optional)
+    assert "name_opt" in params
+    assert params["name_opt"].name == "name_opt"
+    assert params["name_opt"].type_name == "type"
+    assert params["name_opt"].optional is True
+
+    # RHS typed `x`:: (`int`) Description for x.
+    assert "x" in params
+    assert params["x"].name == "x"
+    assert params["x"].type_name == "int"
+    assert params["x"].optional is False
+    assert params["x"].description == "Description for x."
+
+    # RHS typed and optional `y`:: (`int`, optional) Description for y.
+    assert "y" in params
+    assert params["y"].name == "y"
+    assert params["y"].type_name == "int"
+    assert params["y"].optional is True
+    assert params["y"].description == "Description for y."
+
+    # LHS optional only `z` (optional)
+    assert "z" in params
+    assert params["z"].name == "z"
+    assert params["z"].type_name is None
+    assert params["z"].optional is True
+
+
+def test_default_value_syntax_variations() -> None:
+    docstring = """
+    Test various default syntax conventions.
+
+    [parameters]
+    `a`:: (`int`) Alpha. Defaults to 10.
+    `b`:: (`int`) Beta. default is 20.
+    `c`:: (`int`) Gamma. default=30.
+    `d`:: (`int`) Delta. default = 40.
+    `e`:: (`int`) Epsilon. defaults: 50.
+    `f`:: (`int`) Zeta. default: 60.
+    `g`:: (`int`) Eta. defaults = 70.
+    `h`:: (`str`) Theta. defaults: "hello".
+    """
+    doc = asciidocstring.parse(docstring)
+    params = {p.name: p for p in doc.parameters}
+
+    assert params["a"].default == "10"
+    assert params["a"].optional is True
+
+    assert params["b"].default == "20"
+    assert params["b"].optional is True
+
+    assert params["c"].default == "30"
+    assert params["c"].optional is True
+
+    assert params["d"].default == "40"
+    assert params["d"].optional is True
+
+    assert params["e"].default == "50"
+    assert params["e"].optional is True
+
+    assert params["f"].default == "60"
+    assert params["f"].optional is True
+
+    assert params["g"].default == "70"
+    assert params["g"].optional is True
+
+    assert params["h"].default == "hello"
+    assert params["h"].optional is True
+
+
+def test_attribute_term_and_value_parsing() -> None:
+    docstring = """
+    Test attribute parsing.
+
+    [attributes]
+    `MAX_RETRIES` (int):: Maximum retry attempts. Defaults to 3.
+    `TIMEOUT`:: (`float`, optional) Socket timeout. default=5.0.
+    `DEBUG` (bool):: Debug mode flag. default is False.
+    """
+    doc = asciidocstring.parse(docstring)
+    attrs = {a.name: a for a in doc.attributes}
+
+    assert len(doc.attributes) == 3
+
+    assert "MAX_RETRIES" in attrs
+    assert attrs["MAX_RETRIES"].name == "MAX_RETRIES"
+    assert attrs["MAX_RETRIES"].type_name == "int"
+    assert attrs["MAX_RETRIES"].value == "3"
+
+    assert "TIMEOUT" in attrs
+    assert attrs["TIMEOUT"].name == "TIMEOUT"
+    assert attrs["TIMEOUT"].type_name == "float"
+    assert attrs["TIMEOUT"].value == "5.0"
+
+    assert "DEBUG" in attrs
+    assert attrs["DEBUG"].name == "DEBUG"
+    assert attrs["DEBUG"].type_name == "bool"
+    assert attrs["DEBUG"].value == "False"
+
+

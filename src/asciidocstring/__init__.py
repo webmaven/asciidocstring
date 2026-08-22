@@ -20,8 +20,8 @@ from .models import (
     DocstringReturn,
     DocstringWarn,
     DocstringYield,
+    TestBlock,
 )
-from .visitors import TestBlock
 
 __version__ = "0.1.0a6"
 __all__ = [

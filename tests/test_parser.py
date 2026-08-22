@@ -81,3 +81,47 @@ def test_safe_parsing_mode_general_exceptions() -> None:
         doc2 = asciidocstring.parse(None, safe_mode=True)  # type: ignore
     assert len(record) == 1
     assert "Failed to parse" in doc2.to_rest()
+
+
+def test_safe_mode_semantic_fallback_properties() -> None:
+    invalid_syntax = ":: invalid syntax"
+    with pytest.warns(asciidocstring.AsciiDocStringWarning):
+        doc = asciidocstring.parse(invalid_syntax, safe_mode=True)
+
+    assert doc.summary == ""
+    assert doc.description == ""
+    assert doc.parameters == []
+    assert doc.returns == []
+    assert doc.yields == []
+    assert doc.raises == []
+    assert doc.receives == []
+    assert doc.warns == []
+    assert doc.attributes == []
+    assert doc.examples == []
+    assert doc.deprecated is None
+    # to_rest() and ast should still produce the warning admonition
+    assert doc.ast is not None
+    assert ".. warning::" in doc.to_rest()
+
+
+def test_document_repr_and_str() -> None:
+    docstring = """
+    A sample docstring summary.
+
+    Some more details here.
+    """
+    doc = asciidocstring.parse(docstring)
+    assert repr(doc) == (
+        "<AsciiDocStringDocument status='valid' summary='A sample docstring summary.'>"
+    )
+    assert str(doc) == doc.clean_source
+
+    invalid_syntax = ":: invalid"
+    with pytest.warns(asciidocstring.AsciiDocStringWarning):
+        failed_doc = asciidocstring.parse(invalid_syntax, safe_mode=True)
+    assert repr(failed_doc) == (
+        "<AsciiDocStringDocument status='parse_failed' summary=''>"
+    )
+    assert str(failed_doc) == failed_doc.clean_source
+
+

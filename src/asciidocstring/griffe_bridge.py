@@ -1,11 +1,14 @@
 """Bridge for ingesting and converting Griffe docstring sections."""
 
-from typing import Any, List, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, Sequence, Union
 
 from .document import AsciiDocStringDocument, parse
 
+if TYPE_CHECKING:
+    import griffe
 
-def to_asciidoc(sections: List[Any]) -> str:
+
+def to_asciidoc(sections: Sequence[Union["griffe.DocstringSection", Any]]) -> str:
     """Convert a list of Griffe DocstringSection objects into clean AsciiDoc markup.
 
     Args:
@@ -14,7 +17,8 @@ def to_asciidoc(sections: List[Any]) -> str:
     Returns:
         A string containing formatted AsciiDoc markup representing the sections.
     """
-    blocks: List[str] = []
+    blocks: list[str] = []
+
 
     for section in sections:
         kind = getattr(section, "kind", None)
@@ -104,11 +108,13 @@ def to_asciidoc(sections: List[Any]) -> str:
     return "\n\n".join(blocks)
 
 
-def from_sections(sections: List[Any]) -> AsciiDocStringDocument:
+def from_sections(
+    sections: Sequence[Union["griffe.DocstringSection", Any]],
+) -> AsciiDocStringDocument:
     """Convert Griffe DocstringSection items to an AsciiDocStringDocument.
 
     Args:
-        sections: A list of Griffe `DocstringSection` instances.
+        sections: A sequence of Griffe `DocstringSection` instances.
 
     Returns:
         An `AsciiDocStringDocument` representing the converted sections.
@@ -118,9 +124,10 @@ def from_sections(sections: List[Any]) -> AsciiDocStringDocument:
 
 
 def from_griffe(
-    docstring: Union[Any, str],
+    docstring: Union["griffe.Docstring", str],
     style: Literal["google", "numpy", "sphinx", "auto"] = "auto",
 ) -> AsciiDocStringDocument:
+
     """Parse docstring using Griffe static parser and return AsciiDocStringDocument.
 
     Args:

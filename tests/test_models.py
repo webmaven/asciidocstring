@@ -90,3 +90,26 @@ def test_docstring_models_instantiation() -> None:
     assert ex.content == ">>> add(1, 2)\n3"
     assert ex.is_interactive
     assert ex.attributes == {"test": True}
+
+
+def test_testblock_and_docstring_example_harmonization() -> None:
+    from asciidocstring.models import DocstringExample, TestBlock
+    from asciidocstring.visitors import TestBlock as VisitorTestBlock
+
+    # TestBlock from models or visitors is harmonized with DocstringExample
+    tb = TestBlock(
+        content="assert 1 == 1",
+        language="python",
+        line_number=5,
+        is_interactive=False,
+        attributes={"style": "source"},
+    )
+    assert isinstance(tb, DocstringExample)
+    assert isinstance(tb, TestBlock)
+    assert isinstance(tb, VisitorTestBlock)
+    assert tb.content == "assert 1 == 1"
+    assert tb.language == "python"
+    assert tb.line_number == 5
+    assert not tb.is_interactive
+    assert tb.attributes == {"style": "source"}
+

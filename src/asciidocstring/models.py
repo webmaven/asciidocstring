@@ -141,3 +141,8 @@ class DocstringExample:
     line_number: int = 1
     is_interactive: bool = False
     attributes: dict[str, Any] = field(default_factory=dict)
+
+
+# Harmonize TestBlock and DocstringExample
+TestBlock = DocstringExample
+

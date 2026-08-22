@@ -105,10 +105,28 @@ class SemanticExtractorVisitor(NodeVisitor):
         return ""
 
     def _parse_param_term(self, term_text: str, desc_text: str) -> DocstringParam:
-        clean_term = term_text.strip().strip("`").strip()
+        clean_term = term_text.strip()
         optional = False
         type_name = None
         default_val = None
+
+        # Check LHS for parenthesized type/optional:
+        # e.g. `x1` (float) or name (type, optional)
+        term_match = re.match(r"^(.*?)\s*\(([^)]+)\)\s*$", clean_term)
+
+        if term_match:
+            raw_name, raw_type = term_match.groups()
+            name = raw_name.strip().strip("`").strip()
+            type_parts = [
+                p.strip().strip("`") for p in raw_type.split(",") if p.strip()
+            ]
+            if "optional" in [p.lower() for p in type_parts]:
+                optional = True
+                type_parts = [p for p in type_parts if p.lower() != "optional"]
+            if type_parts:
+                type_name = type_parts[0]
+        else:
+            name = clean_term.strip("`").strip()
 
         desc = desc_text.strip()
         type_match = re.match(
@@ -117,15 +135,18 @@ class SemanticExtractorVisitor(NodeVisitor):
         if type_match:
             raw_type, remaining_desc = type_match.groups()
             desc = remaining_desc.strip()
-            type_parts = [p.strip().strip("`") for p in raw_type.split(",")]
+            type_parts = [
+                p.strip().strip("`") for p in raw_type.split(",") if p.strip()
+            ]
             if "optional" in [p.lower() for p in type_parts]:
                 optional = True
                 type_parts = [p for p in type_parts if p.lower() != "optional"]
-            if type_parts:
+            if not type_name and type_parts:
                 type_name = type_parts[0]
 
+
         default_match = re.search(
-            r"(?:defaults?\s+(?:to|is))\s*(?:[`'\"]([^`'\"]+)[`'\"]|([^\s,;)]+))",
+            r"(?:defaults?(?:\s+(?:to|is)|\s*[:=]))\s*(?:[`'\"]([^`'\"]+)[`'\"]|([^\s,;)]+))",
             desc,
             re.IGNORECASE,
         )
@@ -135,12 +156,13 @@ class SemanticExtractorVisitor(NodeVisitor):
             ).rstrip(".").strip()
 
         return DocstringParam(
-            name=clean_term,
+            name=name,
             type_name=type_name,
             description=desc,
             default=default_val,
             optional=optional or (default_val is not None),
         )
+
 
     def _parse_return_term(
         self, term_text: str, desc_text: str
@@ -289,12 +311,17 @@ class SemanticExtractorVisitor(NodeVisitor):
         style = attrs.get("style", "")
         lang = attrs.get("language", "python")
         content = self._get_node_text(node)
+        line_number = 1
+        if hasattr(node, "location") and node.location:
+            line_number = node.location[0].get("line", 1)
         if style == "source" or node.name == "listing" or "test" in attrs:
             self.examples.append(
                 DocstringExample(
                     content=content,
                     language=lang,
+                    line_number=line_number,
                     is_interactive=">>> " in content,
                     attributes=attrs,
                 )
             )
+

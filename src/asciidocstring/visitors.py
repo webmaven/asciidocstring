@@ -1,20 +1,17 @@
 """AST visitors for reStructuredText serialization and doctest extraction."""
 
-from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, List
 
 from asciidoctrine.nodes import Listing, NodeVisitor
 
+from .models import TestBlock
 
-@dataclass
-class TestBlock:
-    """Represents an executable code block extracted from a docstring."""
+__all__ = [
+    "TestBlock",
+    "TestBlockExtractorVisitor",
+    "ReSTSerializerVisitor",
+]
 
-    content: str
-    language: str
-    line_number: int
-    is_interactive: bool  # True if it contains ">>> " style prompts
-    attributes: Dict[str, Any]
 
 
 class TestBlockExtractorVisitor(NodeVisitor):
