@@ -73,6 +73,3 @@ strict = true
 warn_unreachable = true
 pretty = true
 
-[[tool.mypy.overrides]]
-module = ["griffe", "griffe.*"]
-ignore_missing_imports = true

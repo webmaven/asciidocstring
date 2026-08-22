@@ -215,33 +215,33 @@ Here is a side-by-side view of how AsciiDoc syntax in a docstring is translated 
 .Input AsciiDoc Docstring
 [source,asciidoc]
 ----
-= Parse Coordinates
+Calculate the distance between two points.
 
-This function processes dynamic coordinate objects.
+[parameters]
+`x`:: (`int`) The horizontal coordinate.
+`y`:: (`int`) The vertical coordinate.
+`origin`:: (`bool`, optional) Measure from origin. Defaults to `True`.
 
-NOTE: Coordinates must be non-negative integers.
-
-x (int):: The horizontal component
-y (int):: The vertical component
+[returns]
+`float`:: The Euclidean distance.
 ----
 
 .Output reStructuredText (reST)
 [source,rst]
 ----
-Parse Coordinates
-=================
+Calculate the distance between two points.
 
-This function processes dynamic coordinate objects.
+``x``
+   (``int``) The horizontal coordinate.
 
-.. note::
+``y``
+   (``int``) The vertical coordinate.
 
-   Coordinates must be non-negative integers.
+``origin``
+   (``bool``, optional) Measure from origin. Defaults to ``True``.
 
-x (int)
-   The horizontal component
-
-y (int)
-   The vertical component
+``float``
+   The Euclidean distance.
 ----
 
 === Catching Syntax and Parsing Errors
