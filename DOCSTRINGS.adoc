@@ -1,0 +1,871 @@
+= Writing AsciiDoc Python Docstrings
+:toc: left
+:toclevels: 3
+:sectnums:
+:idprefix:
+:idseparator: -
+:source-highlighter: rouge
+
+A comprehensive, production-grade guide and specification for writing semantic, expressive, and tool-friendly Python docstrings using AsciiDoc and the `asciidocstring` ecosystem.
+
+== Introduction & Philosophy
+
+Docstrings are the frontline interface between library authors and developers. While formats like reStructuredText (reST), Google style, and NumPy style have historically dominated the Python ecosystem, **AsciiDoc** offers a distinct combination of visual clarity, syntactic elegance, and structural power.
+
+=== Why AsciiDoc for Python Docstrings?
+
+* *High Readability in Plain Text*: AsciiDoc docstrings remain clean, intuitive, and distraction-free when read directly in terminal pagers, source code editors, and IDE tooltips.
+* *Lossless Semantic Extraction*: Semantic sections—including parameters, return values, exceptions, generator yields/receives, warnings, attributes, deprecations, and doctests—are parsed into a strongly typed Abstract Semantic Graph (ASG) and structured dataclass models.
+* *Native Sphinx & Documentation Tooling*: Easily rendered into Sphinx-compatible reST via `asciidocstring` or compiled into HTML, PDF, and EPUB through the AsciiDoc toolchain.
+* *Pure-Python & Pyodide/WASM Ready*: The parser operates in pure Python with zero native C-extensions, making it fully portable to WebAssembly (WASM), in-browser IDEs, and constrained execution environments.
+* *Executable Doctests*: Code snippets and interactive REPL sessions (`>>>`) can be automatically extracted and validated in continuous integration pipelines.
+
+=== Style Comparison
+
+[cols="1m,2,2,2", options="header"]
+|===
+| Feature | AsciiDoc Style | Google Style | NumPy Style
+
+| Parameter List
+| `[parameters]` +
+  `` `name` (type):: Description ``
+| `Args:` +
+  `    name (type): Description`
+| `Parameters` +
+  `----------` +
+  `name : type` +
+  `    Description`
+
+| Default Values
+| `Defaults to 42.` +
+  `default is "utf-8"` +
+  `default=True`
+| `Defaults to 42.`
+| `default: 42`
+
+| Deprecation
+| `[deprecated]` +
+  `====` +
+  `Deprecated in version 2.0: Reason.` +
+  `====`
+| Inline note in description
+| `.. deprecated:: 2.0` +
+  `   Reason.`
+
+| Formatting
+| `*bold*`, `_italic_`, `` `code` ``
+| Markdown / plain text
+| reST markup
+
+| Admonitions
+| `NOTE:`, `TIP:`, `WARNING:`
+| Not standardized
+| `.. note::`, `.. warning::`
+|===
+
+---
+
+== Docstring Anatomy & Structural Layout
+
+A well-formed AsciiDoc docstring is organized into three primary structural layers:
+
+1. *Summary Line*: A single concise paragraph summarizing what the object does.
+2. *Extended Description*: Optional contextual paragraphs, usage notes, architectural overview, or admonitions.
+3. *Semantic Sections*: Structured description lists and blocks detailing parameters, return types, exceptions, yield/receive types, warnings, attributes, deprecations, and example code.
+
+=== Structural Diagram
+
+[source,text]
+----
+┌─────────────────────────────────────────────────────────────┐
+│ 1. Summary Line (First Paragraph)                           │
+│    "Compute the geodesic distance between two coordinates." │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────┐
+│ 2. Extended Description (Optional Paragraphs & Blocks)      │
+│    "Implements Vincenty's inverse geodesic formula..."      │
+│                                                             │
+│    NOTE: Coordinates must be in decimal degrees.            │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────┐
+│ 3. Semantic Sections                                        │
+│    ├── [parameters]   -> Parameter definitions & defaults   │
+│    ├── [returns]      -> Return types and descriptions      │
+│    ├── [raises]       -> Exception specifications           │
+│    ├── [yields]       -> Generator yield types              │
+│    ├── [receives]     -> Generator receive types (.send)    │
+│    ├── [warns]        -> Warning categories and triggers    │
+│    ├── [attributes]   -> Class or module attributes         │
+│    ├── [deprecated]   -> Deprecation notices & versions     │
+│    └── [examples]     -> Code blocks & interactive doctests │
+└─────────────────────────────────────────────────────────────┘
+----
+
+=== Whitespace & Indentation Handling
+
+Python docstrings are automatically stripped of common leading whitespace using `inspect.cleandoc()`. You can indent your AsciiDoc markup to match your Python code indentation naturally:
+
+[source,python]
+----
+def calculate_area(width: float, height: float) -> float:
+    """Calculate the total area of a rectangle.
+
+    Multi-line descriptions maintain their relative indentation
+    cleanly without requiring awkward left-margin alignments.
+
+    [parameters]
+    `width` (float):: The width of the rectangle in meters.
+    `height` (float):: The height of the rectangle in meters.
+
+    [returns]
+    `float`:: The calculated area in square meters.
+    """
+    return width * height
+----
+
+IMPORTANT: AsciiDoc requires a blank line between a paragraph and an ensuing list, block, or section header. Always insert an empty line before starting a description list (`[parameters]`, `[returns]`, etc.) or admonition block.
+
+---
+
+== Semantic Sections & Syntax Specifications
+
+Semantic sections provide machine-readable metadata that IDEs, documentation generators (like Sphinx), and static analysis tools extract and inspect.
+
+`asciidocstring` recognizes semantic sections identified by:
+
+* *Block Attributes* (recommended): `[parameters]`, `[returns]`, `[raises]`, `[yields]`, `[receives]`, `[warns]`, `[attributes]`, `[deprecated]`, `[examples]`.
+* *Section Headers*: `== Parameters`, `== Returns`, `== Raises`, etc.
+* *Block Titles*: `.Parameters`, `.Returns`, `.Raises`, etc.
+* *Common Synonyms*: `[args]`, `[params]`, `[arguments]`, `[return]`, `[exceptions]`, `[warnings]`, `[attrs]`, `[deprecation]`.
+
+=== Parameters (`[parameters]`)
+
+Document function, method, or constructor arguments using description lists under a `[parameters]` block attribute (or synonyms `[args]`, `[params]`, `[arguments]`).
+
+`asciidocstring` supports two type-annotation styles:
+
+==== Left-Hand Side (LHS) Style (Recommended)
+
+Place the type annotation in parentheses directly following the parameter name on the left side of the `::` delimiter:
+
+[source,asciidoc]
+----
+[parameters]
+`name` (str):: The unique user handle.
+`timeout` (int, optional):: Connection timeout in seconds. Defaults to `30`.
+`retry_count` (int):: Maximum number of retries. default=3.
+`flags` (optional):: Bitmask configuration flags.
+----
+
+==== Right-Hand Side (RHS) Style
+
+Place the type annotation in parentheses at the start of the description definition on the right side of the `::` delimiter:
+
+[source,asciidoc]
+----
+[parameters]
+`name`:: (`str`) The unique user handle.
+`timeout`:: (`int`, optional) Connection timeout in seconds. Defaults to `30`.
+`retry_count`:: (`int`) Maximum number of retries. default is 3.
+----
+
+==== Specifying Defaults
+
+Default values are automatically extracted and populated into the semantic AST model (`param.default`). When a default value is specified, `optional` is automatically inferred as `True`.
+
+Supported default formats include:
+
+[cols="1m,2", options="header"]
+|===
+| Syntax Format | Example
+
+| `Defaults to X`
+| `` `timeout` (int, optional):: Connection timeout. Defaults to `30`. ``
+
+| `default is X`
+| `` `mode` (str):: Execution mode. default is "sync". ``
+
+| `default=X` / `default = X`
+| `` `retries` (int):: Retry count. default=5. ``
+
+| `defaults: X` / `default: X`
+| `` `factor` (float):: Scale factor. defaults: 1.5. ``
+
+| `defaults = X`
+| `` `target` (str):: Target name. defaults = "all". ``
+|===
+
+TIP: Default values can be unquoted numbers (`30`, `1.5`), quoted string literals (`"utf-8"`, `'async'`), backtick-wrapped identifiers (`` `None` ``, `` `math.pi` ``), or dotted paths (`` `os.path` ``).
+
+=== Returns (`[returns]`)
+
+Document the return value of a function or method using a description list under `[returns]` (or `[return]`):
+
+[source,asciidoc]
+----
+[returns]
+`dict[str, Any]`:: A JSON-serializable dictionary containing the processed record.
+----
+
+For composite or named return values (e.g. tuples or specialized dataclasses):
+
+[source,asciidoc]
+----
+[returns]
+`tuple[int, int]`:: A two-tuple containing `(quotient, remainder)`.
+----
+
+=== Yields & Receives (`[yields]`, `[receives]`)
+
+For Python generators and coroutines, document values produced by `yield` expressions and values accepted by generator `.send()` invocations:
+
+[source,asciidoc]
+----
+[yields]
+`bytes`:: Chunks of decoded binary payload from the stream.
+
+[receives]
+`int`:: New buffer capacity dynamically passed via `.send()`.
+----
+
+=== Exceptions & Raises (`[raises]`)
+
+Document exceptions that may be raised by the function, method, or property under `[raises]` (or `[raise]`, `[exceptions]`, `[exception]`):
+
+[source,asciidoc]
+----
+[raises]
+`ValueError`:: If `timeout` is negative or non-numeric.
+`ConnectionTimeoutError`:: If the remote host does not respond within the allocated timeframe.
+`AuthenticationError`:: If the API key is invalid or revoked.
+----
+
+=== Warnings (`[warns]`)
+
+Document warnings that may be triggered under specific runtime conditions using `[warns]` (or `[warn]`, `[warnings]`, `[warning]`):
+
+[source,asciidoc]
+----
+[warns]
+`UserWarning`:: If unencrypted HTTP fallback is enabled in production.
+`ResourceWarning`:: If an active database connection is left unclosed upon destruction.
+----
+
+=== Attributes (`[attributes]`)
+
+Document module-level variables, class variables, or instance attributes under `[attributes]` (or `[attribute]`, `[attrs]`):
+
+[source,asciidoc]
+----
+[attributes]
+`MAX_POOL_SIZE` (int):: Maximum allowed idle connections in the pool. Defaults to `100`.
+`is_connected` (bool):: Indicates whether the socket is currently connected.
+`retry_strategy` (Callable):: Custom retry handler callback. default is `exponential_backoff`.
+----
+
+=== Deprecation Notices (`[deprecated]`)
+
+Mark deprecated functions, classes, arguments, or behaviors using `[deprecated]` blocks or admonitions. The parser automatically extracts the targeted version and deprecation reason.
+
+==== Admonition Block Format (Recommended)
+
+[source,asciidoc]
+----
+[deprecated]
+====
+Deprecated in version 2.4.0: Use `execute_query_async` instead.
+====
+----
+
+==== Open Block or Paragraph Format
+
+[source,asciidoc]
+----
+[deprecated]
+~~~~
+Deprecated in version 3.0: Legacy synchronous connector has been superseded by `ClientV3`.
+~~~~
+----
+
+Or as a direct paragraph:
+
+[source,asciidoc]
+----
+[deprecated]
+Deprecated in version 1.5: Pass explicit `encoding` parameter.
+----
+
+=== Code Examples & Doctests (`[examples]`, `[source]`)
+
+Code snippets within docstrings provide live documentation and testable verification.
+
+==== Standard Source Code Blocks
+
+Use `[source,python]` fenced with four dashes (`----`):
+
+[source,asciidoc]
+-----
+[source,python]
+----
+client = HttpClient(base_url="https://api.example.com")
+response = client.get("/health")
+assert response.status_code == 200
+----
+-----
+
+==== Interactive Python Sessions (Doctests)
+
+Interactive REPL sessions using `>>> ` prompts are automatically flagged by `asciidocstring` as interactive doctests (`is_interactive=True`):
+
+[source,asciidoc]
+-----
+[source,python]
+----
+>>> from math_utils import add
+>>> add(2, 3)
+5
+>>> add(-1, 1)
+0
+----
+-----
+
+==== Doctest Tagging & Filtering
+
+To explicitly mark a code block as an executable test for tools like `AsciiDoctest` or test runners, tag it with `[source,python,test]` or `[.test]`:
+
+[source,asciidoc]
+-----
+[source,python,test]
+----
+assert parse_iso_date("2026-08-22").year == 2026
+----
+-----
+
+---
+
+== Rich Inline Formatting & AsciiDoc Features
+
+AsciiDoc provides clean inline formatting constructs that translate directly into high-fidelity reStructuredText for Sphinx and HTML for web output.
+
+=== Inline Text Formatting
+
+[cols="1m,1m,2", options="header"]
+|===
+| Syntax | Output | Usage
+
+| `*bold text*`
+| **bold text**
+| Strong emphasis and keywords
+
+| `_italic text_`
+| *italic text*
+| Emphasis, book/paper titles, or mathematical variables
+
+| `` `code snippet` ``
+| `code snippet`
+| Variable names, function identifiers, and inline code
+
+| `https://example.com[Label]`
+| https://example.com[Label]
+| Hyperlinks with custom label text
+
+| `https://example.com`
+| https://example.com
+| Bare URL autolinks
+|===
+
+=== Admonitions
+
+Use single-line or multi-line block admonitions to draw attention to critical implementation details, best practices, or potential pitfalls.
+
+==== Single-Line Admonitions
+
+[source,asciidoc]
+----
+NOTE: This function caches results in memory using an LRU cache.
+
+TIP: For high-throughput scenarios, use batch processing via `insert_many()`.
+
+IMPORTANT: Must be called within an active asyncio event loop.
+
+CAUTION: Modifying the underlying buffer in-place may invalidate active iterators.
+
+WARNING: Passwords are not encrypted in local transit unless TLS is configured.
+----
+
+==== Multi-Line Block Admonitions
+
+For extended explanations containing paragraphs, lists, or code snippets, enclose the content in four equals signs (`====`):
+
+[source,asciidoc]
+-----
+[WARNING]
+====
+This operation acquires an exclusive database lock across all worker threads.
+
+Ensure all long-running transactions are committed before invoking this routine.
+====
+-----
+
+=== Lists & Nested Lists
+
+AsciiDoc provides simple asterisks (`*`) for unordered lists and dots (`.`) for ordered lists. Use repetition for nesting depth.
+
+[source,asciidoc]
+----
+* *Step 1*: Initialize the configuration dictionary.
+* *Step 2*: Validate required environment variables:
+** Check for `DATABASE_URL`.
+** Check for `SECRET_KEY`.
+* *Step 3*: Connect to the master cluster.
+----
+
+Numbered lists:
+
+[source,asciidoc]
+----
+. Connect to the socket.
+. Authenticate handshake token.
+.. Verify public certificate.
+.. Exchange session secrets.
+. Begin payload streaming.
+----
+
+=== Footnotes & References
+
+Document citations, background RFCs, and academic references using native footnotes:
+
+* *Anonymous Footnote*: `footnote:[RFC 7519 JSON Web Token Specification]`
+* *Named Footnote Definition*: `footnoteref:[rfc7519, RFC 7519 JSON Web Token Specification]`
+* *Named Footnote Re-reference*: `footnoteref:[rfc7519]`
+
+AsciiDocstring automatically aggregates footnote definitions and places them at the base of the rendered reST/HTML document.
+
+=== Thematic Breaks
+
+Insert horizontal rules or thematic breaks using three apostrophes (`'''`):
+
+[source,asciidoc]
+----
+High-level overview of the algorithm.
+
+'''
+
+Detailed mathematical proof and operational constraints.
+----
+
+---
+
+== Complete, Real-World Examples
+
+=== Example 1: Standard Utility Function
+
+[source,python]
+----
+def parse_duration(
+    duration_str: str,
+    default_unit: str = "s",
+    allow_negative: bool = False,
+) -> float:
+    """Parse a human-readable duration string into total seconds.
+
+    Supports composite string units such as `1h 30m`, `45s`, `250ms`,
+    and `1.5d`. If no unit suffix is provided on a number, `default_unit`
+    is assumed.
+
+    [source,python,test]
+    ----
+    >>> parse_duration("1h 30m")
+    5400.0
+    >>> parse_duration("250ms")
+    0.25
+    >>> parse_duration("10", default_unit="m")
+    600.0
+    ----
+
+    NOTE: Unit parsing is case-insensitive. Whitespace between numbers
+    and units is optional.
+
+    [parameters]
+    `duration_str` (str):: The human-readable duration text (e.g. `"2h 15m"`).
+    `default_unit` (str, optional):: Unit assumed when omitted. Defaults to `"s"`.
+    `allow_negative` (bool, optional):: If `True`, permits negative durations. Defaults to `False`.
+
+    [returns]
+    `float`:: Total duration represented in floating-point seconds.
+
+    [raises]
+    `ValueError`:: If `duration_str` cannot be parsed or represents a negative value when `allow_negative=False`.
+    `TypeError`:: If `duration_str` is not a string instance.
+    """
+    ...
+----
+
+=== Example 2: Class with Attributes & Methods
+
+[source,python]
+----
+class ConnectionPool:
+    """Thread-safe connection pool for managing persistent database sockets.
+
+    Maintains a pool of pre-authenticated TCP connections, dynamically
+    scaling up to `max_size` under load and recycling idle sockets after
+    `idle_timeout` seconds.
+
+    [attributes]
+    `max_size` (int):: Maximum number of concurrent active connections. Defaults to `20`.
+    `idle_timeout` (float):: Sockets idle longer than this duration are closed. Defaults to `300.0`.
+    `is_closed` (bool):: Flag indicating whether the pool has been shut down.
+
+    [source,python]
+    ----
+    pool = ConnectionPool(host="db.internal.net", max_size=10)
+    with pool.acquire() as conn:
+        conn.execute("SELECT 1")
+    ----
+    """
+
+    def __init__(
+        self,
+        host: str,
+        port: int = 5432,
+        max_size: int = 20,
+        idle_timeout: float = 300.0,
+    ) -> None:
+        """Initialize a new connection pool instance.
+
+        [parameters]
+        `host` (str):: Database server hostname or IP address.
+        `port` (int, optional):: Remote port number. Defaults to `5432`.
+        `max_size` (int, optional):: Maximum connections in the pool. Defaults to `20`.
+        `idle_timeout` (float, optional):: Socket idle timeout in seconds. Defaults to `300.0`.
+
+        [raises]
+        `ConnectionError`:: If the initial handshake to `host:port` fails.
+        """
+        ...
+
+    def acquire(self, timeout: float | None = None) -> "PooledConnection":
+        """Acquire a healthy connection from the pool.
+
+        [parameters]
+        `timeout` (float, optional):: Max seconds to wait for an available socket. Defaults to `None` (blocks indefinitely).
+
+        [returns]
+        `PooledConnection`:: An active connection context manager ready for queries.
+
+        [raises]
+        `PoolExhaustedError`:: If no connection becomes available within `timeout` seconds.
+        `RuntimeError`:: If called on a closed connection pool.
+        """
+        ...
+----
+
+=== Example 3: Generator Function (Yields & Receives)
+
+[source,python]
+----
+from typing import Generator
+
+
+def chunked_stream_processor(
+    chunk_size: int = 1024,
+) -> Generator[bytes, int | None, None]:
+    """Process incoming streaming data buffers in discrete chunk batches.
+
+    Dynamically receives variable byte sizes through `.send()`, allowing
+    downstream consumers to adjust flow control and batch throughput.
+
+    [parameters]
+    `chunk_size` (int, optional):: Initial chunk buffer byte size. Defaults to `1024`.
+
+    [yields]
+    `bytes`:: Sliced byte chunks read from the underlying input buffer.
+
+    [receives]
+    `int | None`:: Optional integer passed to `send()` to dynamically resize chunk size for subsequent iterations.
+
+    [raises]
+    `ValueError`:: If received chunk size is less than or equal to 0.
+
+    [source,python,test]
+    ----
+    >>> gen = chunked_stream_processor(chunk_size=4)
+    >>> next(gen)  # Prime the generator
+    b''
+    ----
+    """
+    ...
+----
+
+=== Example 4: Deprecated Function with Migration Advice
+
+[source,python]
+----
+def fetch_user_by_id_legacy(user_id: int) -> dict:
+    """Fetch user account record using the legacy v1 query API.
+
+    [deprecated]
+    ====
+    Deprecated in version 2.4.0: This function uses synchronous socket I/O and will be removed in version 3.0.0. Use `UserManager.fetch_async()` instead.
+    ====
+
+    [parameters]
+    `user_id` (int):: The integer primary key identifier of the user.
+
+    [returns]
+    `dict`:: User profile dictionary payload.
+
+    [warns]
+    `DeprecationWarning`:: Triggered on every invocation to alert callers of upcoming sunset.
+
+    [raises]
+    `UserNotFoundError`:: If `user_id` does not match any record.
+    """
+    ...
+----
+
+---
+
+== Best Practices & Common Pitfalls
+
+=== The Do's
+
+* [x] *Always separate paragraphs from lists with a blank line.*
++
+AsciiDoc uses blank lines to delimit block boundaries. Omitting the blank line before a `[parameters]` description list can cause the list to be parsed as plain text paragraph content.
+
+* [x] *Wrap identifiers and type names in backticks.*
++
+Use `` `param_name` `` and `` `int` ``. Backtick monospace formatting ensures clear visual distinction and accurate semantic extraction.
+
+* [x] *Choose one parameter type style (LHS vs RHS) and use it consistently.*
++
+Both `` `x` (int):: `` (LHS) and `` `x`:: (`int`) `` (RHS) are fully supported. For modern codebases, **LHS** (`` `x` (type):: ``) is recommended for its similarity to Python's native syntax.
+
+* [x] *Use standard default value phrases.*
++
+Adopt standard phrasing such as `Defaults to X.` or `default=X.` so that default extractors reliably capture initial values.
+
+* [x] *Keep the summary line concise and focused.*
++
+The summary should fit on a single line (under 80 characters when possible) in active imperative mood (e.g. `"Compute the distance..."` rather than `"This function computes..."`).
+
+=== The Don'ts
+
+* [x] *Do NOT use `= Document Title` inside function or method docstrings.*
++
+In AsciiDoc, `= Title` defines the primary Document Title (level 0). Using `= Title` in a docstring causes the parser to treat the docstring as a root document header rather than regular docstring content. Use plain paragraphs or section headers (`== Section`) if sub-divisions are needed.
+
+* [x] *Do NOT use arbitrary indentation within description list terms.*
++
+Keep term lines flush with the docstring's base indentation level:
++
+[source,asciidoc]
+----
+// Correct:
+[parameters]
+`alpha` (int):: First argument.
+`beta` (str):: Second argument.
+
+// Incorrect:
+[parameters]
+    `alpha` (int):: First argument.
+        `beta` (str):: Second argument.
+----
+
+* [x] *Do NOT omit the `::` operator in description lists.*
++
+AsciiDoc definition terms require two consecutive colons (`::`). A single colon (e.g. `param: (int) desc`) is treated as plain text.
+
+---
+
+== Programmatic Querying & Tooling Integration
+
+The `asciidocstring` library provides a high-level API to parse, query, and transform AsciiDoc docstrings programmatically.
+
+=== Parsing & Querying Semantic Properties
+
+[source,python]
+----
+import asciidocstring
+
+docstring = """
+    Calculate the hypotenuse of a right-angled triangle.
+
+    [parameters]
+    `a` (float):: Length of side a.
+    `b` (float):: Length of side b.
+
+    [returns]
+    `float`:: The calculated length of the hypotenuse.
+
+    [raises]
+    `ValueError`:: If either side length is non-positive.
+    """
+
+doc = asciidocstring.parse(docstring)
+
+# 1. Summary and description
+print(doc.summary)
+# "Calculate the hypotenuse of a right-angled triangle."
+
+# 2. Parameters
+for param in doc.parameters:
+    print(f"Param: {param.name}, Type: {param.type_name}, Optional: {param.optional}")
+    print(f"  Description: {param.description}")
+
+# 3. Return values and exceptions
+for ret in doc.returns:
+    print(f"Returns: {ret.type_name} -> {ret.description}")
+
+for exc in doc.raises:
+    print(f"Raises: {exc.type_name} -> {exc.description}")
+----
+
+=== Rendering to Sphinx-Compatible reST
+
+[source,python]
+----
+# Translate AsciiDoc ASG to Sphinx reStructuredText
+rest_output = doc.to_rest()
+print(rest_output)
+----
+
+=== Extracting Executable Doctests
+
+[source,python]
+----
+# Extract all python test blocks or REPL sessions
+test_blocks = doc.extract_tests(language="python")
+
+for block in test_blocks:
+    print(f"Line {block.line_number} (Interactive: {block.is_interactive}):")
+    print(block.content)
+----
+
+=== Griffe Integration & Ingestion Bridge
+
+Convert existing docstrings from Google, NumPy, or Sphinx conventions into AsciiDoc:
+
+[source,python]
+----
+import asciidocstring
+
+google_docstring = """
+    Send a ping packet to a remote host.
+
+    Args:
+        host (str): Destination hostname.
+        timeout (int, optional): Timeout in seconds. Defaults to 5.
+
+    Returns:
+        bool: True if host responded, False otherwise.
+    """
+
+# Ingest directly via Griffe
+doc = asciidocstring.from_griffe(google_docstring, style="google")
+print(doc.parameters[0].name)  # "host"
+print(doc.parameters[1].default)  # "5"
+----
+
+=== Safe Mode vs Strict Mode
+
+By default, syntax errors raise an `AsciiDocStringParseError`. To prevent documentation build failures in production or CI environments, enable `safe_mode=True`:
+
+[source,python]
+----
+# Safe mode emits a non-blocking AsciiDocStringWarning
+# and generates a Sphinx warning admonition with a visual error caret
+doc = asciidocstring.parse(malformed_docstring, safe_mode=True)
+----
+
+---
+
+== Quick Syntax Reference Cheat Sheet
+
+[cols="2m,3m,3", options="header"]
+|===
+| Semantic Section | Syntax Example | Meaning / Purpose
+
+| Summary
+| `Compute the checksum.`
+| First paragraph, active voice summary.
+
+| Description
+| `Extended details go here.`
+| Subsequent paragraphs before any semantic block.
+
+| Parameters (LHS)
+| `[parameters]` +
+  `` `name` (type, optional):: Desc. Defaults to `0`. ``
+| Typed argument with default value.
+
+| Parameters (RHS)
+| `[parameters]` +
+  `` `name`:: (`type`, optional) Desc. default=0. ``
+| Alternate typed argument convention.
+
+| Returns
+| `[returns]` +
+  `` `type`:: Return description. ``
+| Return value specification.
+
+| Yields
+| `[yields]` +
+  `` `type`:: Yield description. ``
+| Generator yield specification.
+
+| Receives
+| `[receives]` +
+  `` `type`:: Received value description. ``
+| Generator `.send()` input specification.
+
+| Raises
+| `[raises]` +
+  `` `ExceptionType`:: Trigger condition. ``
+| Documented exception.
+
+| Warns
+| `[warns]` +
+  `` `WarningType`:: Trigger condition. ``
+| Documented warning.
+
+| Attributes
+| `[attributes]` +
+  `` `ATTR` (type):: Desc. Defaults to `10`. ``
+| Class / module attribute.
+
+| Deprecated
+| `[deprecated]` +
+  `====` +
+  `Deprecated in version 2.0: Reason.` +
+  `====`
+| Deprecation notice with version.
+
+| Doctests
+| `[source,python,test]` +
+  `----` +
+  `>>> func(1)` +
+  `2` +
+  `----`
+| Interactive or executable doctest code block.
+
+| Inline Styles
+| `*bold*`, `_italic_`, `` `code` ``
+| Formatted typography.
+
+| Hyperlinks
+| `https://example.com[Label]`
+| External web link.
+
+| Admonitions
+| `NOTE: ...`, `TIP: ...`, `WARNING: ...`
+| Informational callout box.
+
+| Footnotes
+| `footnote:[Reference note]`
+| Bottom-of-document reference citation.
+|===

@@ -19,6 +19,7 @@ A pure-Python semantic parser, extractor, and translator for Python docstrings w
 == Key Features
 
 * *Pure Python & WASM/Pyodide Ready*: Zero C-extensions or native binary dependencies.
+* *Comprehensive Style Guide*: Full specification and authoring guide for writing Python docstrings in AsciiDoc (see link:DOCSTRINGS.adoc[DOCSTRINGS.adoc]).
 * *Sphinx Integration*: Converts AsciiDoc docstrings into Sphinx-compatible reStructuredText (reST).
 * *Doctest Extraction*: Queries and extracts executable code blocks and interactive prompts (`>>>`).
 * *Semantic Docstring Inspection*: Query structured docstring metadata including parameters, returns, yields, raises, receives, warns, attributes, deprecations, and examples as strongly typed dataclasses.
@@ -315,6 +316,10 @@ Output:
       :: invalid-syntax
       ^
 ----
+
+== Docstring Authoring Guide
+
+For a complete specification and guide on writing Python docstrings in AsciiDoc—including parameter annotations (LHS vs RHS), default value conventions, return types, yields/receives, exceptions, warnings, class attributes, deprecations, executable doctests, and best practices—consult our link:DOCSTRINGS.adoc[AsciiDoc Docstrings Guide (`DOCSTRINGS.adoc`)].
 
 == API Reference
 

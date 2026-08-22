@@ -5,6 +5,9 @@ This document details all notable changes and releases for `asciidocstring`.
 
 == [Unreleased]
 
+=== Added
+* **Python Docstring Style Guide**: Added link:DOCSTRINGS.adoc[DOCSTRINGS.adoc], a comprehensive, production-grade guide and specification for writing Python docstrings in AsciiDoc covering structure, all semantic sections (parameters, returns, yields, receives, raises, warns, attributes, deprecation, examples), LHS and RHS type annotations, default value syntaxes, rich inline formatting, doctests, real-world examples, and best practices.
+
 ---
 
 == [0.1.0a7] - 2026-08-22
