@@ -356,11 +356,11 @@ AsciiDoc provides clean inline formatting constructs that translate directly int
 | Syntax | Output | Usage
 
 | `*bold text*`
-| **bold text**
+| *bold text*
 | Strong emphasis and keywords
 
 | `_italic text_`
-| *italic text*
+| _italic text_
 | Emphasis, book/paper titles, or mathematical variables
 
 | `` `code snippet` ``
