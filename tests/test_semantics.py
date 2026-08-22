@@ -195,3 +195,62 @@ def test_parse_empty_and_generic_blocks() -> None:
     doc2 = asciidocstring.parse(docstring2)
     assert doc2.summary == "Simple docstring."
     assert len(doc2.parameters) == 0
+
+
+def test_parse_semantic_example_and_open_and_admonition_blocks() -> None:
+    docstring = """
+    Example with various blocks.
+
+    [example]
+    ====
+    print("Example block")
+    ====
+
+    [parameters]
+    ~~~~
+    `x`:: (`int`) Param x in open block.
+    ~~~~
+
+    [NOTE]
+    ====
+    This is a note admonition.
+    ====
+
+    [deprecated]
+    ====
+    Deprecated in version 1.2: Admonition deprecation.
+    ====
+    """
+    doc = asciidocstring.parse(docstring)
+    assert len(doc.parameters) == 1
+    assert doc.parameters[0].name == "x"
+    assert doc.deprecated is not None
+    assert doc.deprecated.version == "1.2"
+
+
+def test_parse_node_text_and_admonition_edge_cases() -> None:
+    from asciidoctrine.nodes import Admonition
+
+    from asciidocstring.semantics import SemanticExtractorVisitor
+
+    visitor = SemanticExtractorVisitor()
+    assert visitor._get_node_text(object()) == ""
+
+    # Test node with terms
+    term_node_a = type("MockTerm", (), {"value": "term_a"})()
+    term_node_b = type("MockTerm", (), {"value": "term_b"})()
+    mock_terms_node = type(
+        "MockTermsNode", (), {"terms": [term_node_a, term_node_b]}
+    )()
+    assert visitor._get_node_text(mock_terms_node) == "term_aterm_b"
+
+    # Test visit_admonition with deprecated role
+    mock_adm = Admonition(
+        variant="deprecated",
+        blocks=[
+            type("MockBlock", (), {"value": "Deprecated in version 1.0: Old"})()
+        ],
+    )
+    visitor.visit_admonition(mock_adm)
+    assert visitor.deprecated is not None
+    assert visitor.deprecated.version == "1.0"

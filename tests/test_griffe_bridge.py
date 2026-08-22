@@ -139,3 +139,12 @@ def test_from_griffe_missing_import() -> None:
     with patch.dict(sys.modules, {"griffe": None}):
         with pytest.raises(ImportError, match="Griffe is required"):
             from_griffe("Some docstring")
+
+
+def test_to_asciidoc_examples_string_items() -> None:
+    sec_ex = griffe.DocstringSectionExamples(["1 + 1\n2"])  # type: ignore[list-item]
+    adoc = to_asciidoc([sec_ex])
+    assert "[source,python,test]" in adoc
+    assert "1 + 1" in adoc
+
+

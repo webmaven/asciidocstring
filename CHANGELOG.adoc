@@ -3,6 +3,21 @@
 
 This document details all notable changes and releases for `asciidocstring`.
 
+== [Unreleased]
+
+=== Added
+* **Semantic AST Parsing & Structured Docstring Querying**: Added structured docstring semantic models (`DocstringParam`, `DocstringReturn`, `DocstringYield`, `DocstringRaise`, `DocstringReceive`, `DocstringWarn`, `DocstringAttribute`, `DocstringDeprecated`, `DocstringExample`) and `SemanticExtractorVisitor` to inspect and extract structured parameters, return types, exceptions, yield/receive types, warnings, attributes, examples, deprecations, summaries, and descriptions (Issue https://github.com/webmaven/asciidocstring/issues/3[#3]).
+* **AsciiDocStringDocument Semantic Properties**: Exposed direct access properties on `AsciiDocStringDocument` (`summary`, `description`, `parameters`, `returns`, `yields`, `raises`, `receives`, `warns`, `attributes`, `deprecated`, `examples`) for effortless semantic docstring querying.
+* **Griffe Ingestion Bridge**: Added `from_griffe`, `from_sections`, and `to_asciidoc` in `asciidocstring.griffe_bridge` to seamlessly bridge Griffe `DocstringSection` structures into `AsciiDocStringDocument` representations (Issue https://github.com/webmaven/asciidocstring/issues/4[#4]).
+
+=== Upgraded
+* Bumped minimum `asciidoctrine` dependency constraint to `>=0.2.0a2` in `pyproject.toml`.
+
+=== Metrics
+* Maintained **100% total code coverage** across all library modules.
+
+---
+
 == [0.1.0a6] - 2026-07-30
 
 === Upgraded
