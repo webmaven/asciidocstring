@@ -6,7 +6,7 @@
 :idseparator: -
 :source-highlighter: rouge
 
-A comprehensive, production-grade guide and specification for writing semantic, expressive, and tool-friendly Python docstrings using AsciiDoc and the `asciidocstring` ecosystem.
+A guide and specification for writing semantic, expressive, and tool-friendly Python docstrings using AsciiDoc and the `asciidocstring` ecosystem.
 
 == Introduction & Philosophy
 
@@ -317,7 +317,7 @@ assert response.status_code == 200
 
 ==== Interactive Python Sessions (Doctests)
 
-Interactive REPL sessions using `>>> ` prompts are automatically flagged by `asciidocstring` as interactive doctests (`is_interactive=True`):
+Interactive REPL sessions using `>>>` prompts are automatically flagged by `asciidocstring` as interactive doctests (`is_interactive=True`):
 
 [source,asciidoc]
 -----
@@ -422,6 +422,14 @@ AsciiDoc provides simple asterisks (`*`) for unordered lists and dots (`.`) for 
 * *Step 3*: Connect to the master cluster.
 ----
 
+Which renders as:
+
+* *Step 1*: Initialize the configuration dictionary.
+* *Step 2*: Validate required environment variables:
+** Check for `DATABASE_URL`.
+** Check for `SECRET_KEY`.
+* *Step 3*: Connect to the master cluster.
+
 Numbered lists:
 
 [source,asciidoc]
@@ -433,9 +441,24 @@ Numbered lists:
 . Begin payload streaming.
 ----
 
+Giving:
+
+. Connect to the socket.
+. Authenticate handshake token.
+.. Verify public certificate.
+.. Exchange session secrets.
+. Begin payload streaming.
+
 === Footnotes & References
 
 Document citations, background RFCs, and academic references using native footnotes:
+
+[source,asciidoc]
+----
+* *Anonymous Footnote*: `footnote:[RFC 7519 JSON Web Token Specification]`
+* *Named Footnote Definition*: `footnoteref:[rfc7519, RFC 7519 JSON Web Token Specification]`
+* *Named Footnote Re-reference*: `footnoteref:[rfc7519]`
+----
 
 * *Anonymous Footnote*: `footnote:[RFC 7519 JSON Web Token Specification]`
 * *Named Footnote Definition*: `footnoteref:[rfc7519, RFC 7519 JSON Web Token Specification]`
