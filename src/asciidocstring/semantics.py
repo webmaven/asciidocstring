@@ -124,12 +124,14 @@ class SemanticExtractorVisitor(NodeVisitor):
                 type_name = type_parts[0]
 
         default_match = re.search(
-            r"(?:defaults? to|default is)\s+[`'\"]?([^`'\".\n]+)[`'\"]?",
+            r"(?:defaults?\s+(?:to|is))\s*(?:[`'\"]([^`'\"]+)[`'\"]|([^\s,;)]+))",
             desc,
             re.IGNORECASE,
         )
         if default_match:
-            default_val = default_match.group(1).strip()
+            default_val = (
+                default_match.group(1) or default_match.group(2) or ""
+            ).rstrip(".").strip()
 
         return DocstringParam(
             name=clean_term,
@@ -189,7 +191,7 @@ class SemanticExtractorVisitor(NodeVisitor):
         version = None
         match = re.search(r"version\s+([0-9a-zA-Z._-]+)", text, re.IGNORECASE)
         if match:
-            version = match.group(1)
+            version = match.group(1).rstrip(".,;:").strip()
         reason = text.strip()
         return DocstringDeprecated(version=version, reason=reason)
 

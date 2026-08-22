@@ -25,6 +25,8 @@ def to_asciidoc(sections: List[Any]) -> str:
             # "other_parameters"
             label = "other_parameters" if "other" in kind_value else kind_value
             items = getattr(section, "value", [])
+            if not items:
+                continue
             lines = [f"[{label}]"]
             for param in items:
                 name = getattr(param, "name", "")
@@ -50,6 +52,8 @@ def to_asciidoc(sections: List[Any]) -> str:
 
         elif kind_value in ("returns", "yields", "raises", "receives", "warns"):
             items = getattr(section, "value", [])
+            if not items:
+                continue
             lines = [f"[{kind_value}]"]
             for obj in items:
                 name = getattr(obj, "name", "")
@@ -61,6 +65,8 @@ def to_asciidoc(sections: List[Any]) -> str:
 
         elif kind_value == "examples":
             items = getattr(section, "value", [])
+            if not items:
+                continue
             for item in items:
                 if isinstance(item, tuple) and len(item) == 2:
                     _, example_code = item
@@ -86,7 +92,7 @@ def to_asciidoc(sections: List[Any]) -> str:
             val = getattr(section, "value", None)
             adm_kind = str(getattr(val, "kind", None) or "NOTE").upper()
             desc = getattr(val, "description", None) or ""
-            blocks.append(f"[{adm_kind}]\n====\n{desc}\n=====")
+            blocks.append(f"[{adm_kind}]\n====\n{desc}\n====")
 
     return "\n\n".join(blocks)
 

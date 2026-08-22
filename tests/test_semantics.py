@@ -254,3 +254,51 @@ def test_parse_node_text_and_admonition_edge_cases() -> None:
     visitor.visit_admonition(mock_adm)
     assert visitor.deprecated is not None
     assert visitor.deprecated.version == "1.0"
+
+
+def test_param_default_values_parsing() -> None:
+    docstring = """
+    Test default parsing.
+
+    [parameters]
+    `pi_val`:: (`float`, optional) Circle constant. Defaults to 3.14.
+    `named_const`:: (`float`, optional) Math constant. Defaults to math.pi.
+    `version_str`:: (`str`, optional) Version string. Defaults to "1.0.0".
+    `quoted_dotted`:: (`str`, optional) Module ref. Defaults to `pkg.mod`.
+    """
+    doc = asciidocstring.parse(docstring)
+    assert len(doc.parameters) == 4
+    assert doc.parameters[0].name == "pi_val"
+    assert doc.parameters[0].default == "3.14"
+
+    assert doc.parameters[1].name == "named_const"
+    assert doc.parameters[1].default == "math.pi"
+
+    assert doc.parameters[2].name == "version_str"
+    assert doc.parameters[2].default == "1.0.0"
+
+    assert doc.parameters[3].name == "quoted_dotted"
+    assert doc.parameters[3].default == "pkg.mod"
+
+
+def test_deprecated_version_trailing_punctuation() -> None:
+    docstring1 = """
+    Test deprecation trailing period.
+
+    [deprecated]
+    Deprecated in version 2.0.
+    """
+    doc1 = asciidocstring.parse(docstring1)
+    assert doc1.deprecated is not None
+    assert doc1.deprecated.version == "2.0"
+
+    docstring2 = """
+    Test deprecation trailing colon.
+
+    [deprecated]
+    Deprecated in version 3.1.0: Use new_api instead.
+    """
+    doc2 = asciidocstring.parse(docstring2)
+    assert doc2.deprecated is not None
+    assert doc2.deprecated.version == "3.1.0"
+

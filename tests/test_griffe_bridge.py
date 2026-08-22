@@ -148,3 +148,26 @@ def test_to_asciidoc_examples_string_items() -> None:
     assert "1 + 1" in adoc
 
 
+def test_to_asciidoc_admonition_delimiter() -> None:
+    sec_adm = griffe.DocstringSectionAdmonition(kind="warning", text="Be careful.")
+    adoc = to_asciidoc([sec_adm])
+    assert adoc == "[WARNING]\n====\nBe careful.\n===="
+
+
+def test_to_asciidoc_empty_sections() -> None:
+    sections = [
+        griffe.DocstringSectionParameters([]),
+        griffe.DocstringSectionOtherParameters([]),
+        griffe.DocstringSectionAttributes([]),
+        griffe.DocstringSectionReturns([]),
+        griffe.DocstringSectionYields([]),
+        griffe.DocstringSectionRaises([]),
+        griffe.DocstringSectionReceives([]),
+        griffe.DocstringSectionWarns([]),
+        griffe.DocstringSectionExamples([]),
+    ]
+    adoc = to_asciidoc(sections)
+    assert adoc == ""
+
+
+
