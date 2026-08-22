@@ -33,6 +33,7 @@ test = [
 lint = [
     "ruff",
     "mypy",
+    "griffe>=1.0.0",
 ]
 dev = [
     "pytest",
@@ -71,3 +72,7 @@ python_version = "3.14"
 strict = true
 warn_unreachable = true
 pretty = true
+
+[[tool.mypy.overrides]]
+module = ["griffe", "griffe.*"]
+ignore_missing_imports = true
