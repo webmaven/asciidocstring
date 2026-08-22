@@ -26,7 +26,7 @@ Docstrings are the frontline interface between library authors and developers. W
 |===
 | Feature | AsciiDoc Style | Google Style | NumPy Style
 
-| Parameter List
+| *Parameter List*
 | `[parameters]` +
   `` `name` (type):: Description ``
 | `Args:` +
@@ -36,28 +36,28 @@ Docstrings are the frontline interface between library authors and developers. W
   `name : type` +
   `    Description`
 
-| Default Values
+| *Default Values*
 | `Defaults to 42.` +
   `default is "utf-8"` +
   `default=True`
 | `Defaults to 42.`
 | `default: 42`
 
-| Deprecation
+| *Deprecation*
 | `[deprecated]` +
   `====` +
   `Deprecated in version 2.0: Reason.` +
   `====`
-| Inline note in description
+| *Inline note in description*
 | `.. deprecated:: 2.0` +
   `   Reason.`
 
-| Formatting
+| *Formatting*
 | `*bold*`, `_italic_`, `` `code` ``
 | Markdown / plain text
 | reST markup
 
-| Admonitions
+| *Admonitions*
 | `NOTE:`, `TIP:`, `WARNING:`
 | Not standardized
 | `.. note::`, `.. warning::`
@@ -460,6 +460,8 @@ Document citations, background RFCs, and academic references using native footno
 * *Named Footnote Re-reference*: `footnoteref:[rfc7519]`
 ----
 
+Resulting in:
+
 * *Anonymous Footnote*: `footnote:[RFC 7519 JSON Web Token Specification]`
 * *Named Footnote Definition*: `footnoteref:[rfc7519, RFC 7519 JSON Web Token Specification]`
 * *Named Footnote Re-reference*: `footnoteref:[rfc7519]`
@@ -813,62 +815,62 @@ doc = asciidocstring.parse(malformed_docstring, safe_mode=True)
 |===
 | Semantic Section | Syntax Example | Meaning / Purpose
 
-| Summary
+| *Summary*
 | `Compute the checksum.`
 | First paragraph, active voice summary.
 
-| Description
+| *Description*
 | `Extended details go here.`
 | Subsequent paragraphs before any semantic block.
 
-| Parameters (LHS)
+| *Parameters (LHS)*
 | `[parameters]` +
   `` `name` (type, optional):: Desc. Defaults to `0`. ``
 | Typed argument with default value.
 
-| Parameters (RHS)
+| *Parameters (RHS)*
 | `[parameters]` +
   `` `name`:: (`type`, optional) Desc. default=0. ``
 | Alternate typed argument convention.
 
-| Returns
+| *Returns*
 | `[returns]` +
   `` `type`:: Return description. ``
 | Return value specification.
 
-| Yields
+| *Yields*
 | `[yields]` +
   `` `type`:: Yield description. ``
 | Generator yield specification.
 
-| Receives
+| *Receives*
 | `[receives]` +
   `` `type`:: Received value description. ``
 | Generator `.send()` input specification.
 
-| Raises
+| *Raises*
 | `[raises]` +
   `` `ExceptionType`:: Trigger condition. ``
 | Documented exception.
 
-| Warns
+| *Warns*
 | `[warns]` +
   `` `WarningType`:: Trigger condition. ``
 | Documented warning.
 
-| Attributes
+| *Attributes*
 | `[attributes]` +
   `` `ATTR` (type):: Desc. Defaults to `10`. ``
 | Class / module attribute.
 
-| Deprecated
+| *Deprecated*
 | `[deprecated]` +
   `====` +
   `Deprecated in version 2.0: Reason.` +
   `====`
 | Deprecation notice with version.
 
-| Doctests
+| *Doctests*
 | `[source,python,test]` +
   `----` +
   `>>> func(1)` +
@@ -876,19 +878,19 @@ doc = asciidocstring.parse(malformed_docstring, safe_mode=True)
   `----`
 | Interactive or executable doctest code block.
 
-| Inline Styles
+| *Inline Styles*
 | `*bold*`, `_italic_`, `` `code` ``
 | Formatted typography.
 
-| Hyperlinks
+| *Hyperlinks*
 | `https://example.com[Label]`
 | External web link.
 
-| Admonitions
+| *Admonitions*
 | `NOTE: ...`, `TIP: ...`, `WARNING: ...`
 | Informational callout box.
 
-| Footnotes
+| *Footnotes*
 | `footnote:[Reference note]`
 | Bottom-of-document reference citation.
 |===
