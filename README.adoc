@@ -9,7 +9,7 @@ image:https://img.shields.io/pypi/v/asciidocstring.svg[PyPI Version, link=https:
 image:https://img.shields.io/pypi/dm/asciidocstring.svg[PyPI Downloads, link=https://pypi.org/project/asciidocstring/]
 image:https://img.shields.io/pypi/pyversions/asciidocstring.svg[Python Versions, link=https://pypi.org/project/asciidocstring/]
 image:https://img.shields.io/pypi/l/asciidocstring.svg[License, link=https://github.com/webmaven/asciidocstring/blob/main/LICENSE]
-image:https://img.shields.io/badge/coverage-99%25-success[Coverage]
+image:https://img.shields.io/badge/coverage-100%25-success[Coverage]
 image:https://img.shields.io/badge/code%20style-ruff-000000.svg[Ruff, link=https://github.com/astral-sh/ruff]
 image:https://img.shields.io/badge/types-mypy-blue.svg[MyPy, link=https://mypy-lang.org/]
 image:https://img.shields.io/badge/Pyodide-WASM%20Ready-6842B2.svg[Pyodide Compatible]
@@ -21,6 +21,8 @@ A pure-Python semantic parser, extractor, and translator for Python docstrings w
 * *Pure Python & WASM/Pyodide Ready*: Zero C-extensions or native binary dependencies.
 * *Sphinx Integration*: Converts AsciiDoc docstrings into Sphinx-compatible reStructuredText (reST).
 * *Doctest Extraction*: Queries and extracts executable code blocks and interactive prompts (`>>>`).
+* *Semantic Docstring Inspection*: Query structured docstring metadata including parameters, returns, yields, raises, receives, warns, attributes, deprecations, and examples as strongly typed dataclasses.
+* *Griffe Ingestion Bridge*: Ingest and parse docstrings via Griffe (Google, NumPy, and Sphinx styles) into AsciiDoc markup and bridge Griffe's AST into structured `AsciiDocStringDocument` models.
 * *Safe Mode & Graceful Fallbacks*: Emits non-blocking warnings (`AsciiDocStringWarning`) with visual error carets during Sphinx builds instead of crashing.
 * *Detailed Diagnostics*: Rich exception reporting with precise line, column, and caret context previews on syntax errors.
 
@@ -30,36 +32,40 @@ A pure-Python semantic parser, extractor, and translator for Python docstrings w
 
 [source,text]
 ----
-                      ┌─────────────────────────┐
-                      │ Raw AsciiDoc Docstring  │
-                      └────────────┬────────────┘
-                                   │
-                                   ▼
-                      ┌─────────────────────────┐
-                      │  asciidocstring.parse() │
-                      └────────────┬────────────┘
-                                   │
-                                   ▼
-                      ┌─────────────────────────┐
-                      │ Abstract Semantic Graph │
-                      └────────────┬────────────┘
-                                   │
-                 ┌─────────────────┴─────────────────┐
-                 ▼                                   ▼
-   ┌───────────────────────────┐       ┌───────────────────────────┐
-   │       doc.to_rest()       │       │    doc.extract_tests()    │
-   └─────────────┬─────────────┘       └─────────────┬─────────────┘
-                 │                                   │
-                 ▼                                   ▼
-   ┌───────────────────────────┐       ┌───────────────────────────┐
-   │ Sphinx-Compatible reST    │       │ Executable Doctest Blocks │
-   └───────────────────────────┘       └───────────────────────────┘
+  ┌────────────────────────┐         ┌────────────────────────┐
+  │ Raw AsciiDoc Docstring │         │ Griffe Docstrings / AST│
+  └───────────┬────────────┘         └───────────┬────────────┘
+              │                                  │
+              ▼                                  ▼
+  ┌────────────────────────┐         ┌────────────────────────┐
+  │ asciidocstring.parse() │◄────────┤ from_griffe() / Bridge │
+  └───────────┬────────────┘         └────────────────────────┘
+              │
+              ▼
+  ┌────────────────────────┐
+  │ Abstract Semantic Graph│
+  └───────────┬────────────┘
+              │
+      ┌───────┼──────────────────────────┬────────────────────────┐
+      ▼                                  ▼                        ▼
+┌───────────┐                      ┌───────────┐            ┌───────────┐
+│ to_rest() │                      │extract_   │            │ Semantic  │
+│           │                      │  tests()  │            │Properties │
+└─────┬─────┘                      └─────┬─────┘            └─────┬─────┘
+      │                                  │                        │
+      ▼                                  ▼                        ▼
+┌───────────┐                      ┌───────────┐            ┌───────────┐
+│Sphinx reST│                      │Executable │            │Structured │
+│           │                      │ Doctests  │            │  Models   │
+└───────────┘                      └───────────┘            └───────────┘
 ----
 
 This parsed semantic representation can be used by downstream libraries to:
 
 1. Render high-fidelity, Sphinx-compatible reStructuredText (reST) using https://pypi.org/project/sphinx-asciidoctrine/[Sphinx-AsciiDoctrine].
 2. Query and extract executable interactive doctest code blocks using https://pypi.org/project/asciidoctest/[AsciiDoctest].
+3. Inspect and query structured docstring metadata (parameters, returns, yields, raises, warns, attributes, deprecations) via strongly typed semantic properties.
+4. Ingest and bridge docstring sections from Griffe (supporting Google, NumPy, and Sphinx docstring conventions).
 
 == Installation
 
@@ -68,6 +74,13 @@ Initialize your project and install the library from https://pypi.org/project/as
 [source,bash]
 ----
 pip install asciidocstring
+----
+
+To install with Griffe ingestion bridge support:
+
+[source,bash]
+----
+pip install "asciidocstring[griffe]"
 ----
 
 To install optional developer dependencies (testing and linting tools):
@@ -111,6 +124,88 @@ test_blocks = doc.extract_tests(language="python")
 for block in test_blocks:
     print(f"Test Code ({block.language}):")
     print(block.content)
+----
+
+=== Semantic Docstring Inspection
+
+`AsciiDocStringDocument` exposes structured, typed properties for programmatic inspection of docstrings:
+
+[source,python]
+----
+import asciidocstring
+
+docstring = """
+    Calculate the Euclidean distance between two points.
+
+    [parameters]
+    `x1` (float):: The x-coordinate of the first point.
+    `y1` (float):: The y-coordinate of the first point.
+    `x2` (float, optional):: The x-coordinate of the second point. Defaults to `0.0`.
+    `y2` (float, optional):: The y-coordinate of the second point. Defaults to `0.0`.
+
+    [returns]
+    `float`:: The Euclidean distance between the points.
+
+    [raises]
+    `TypeError`:: If any coordinate is non-numeric.
+    """
+
+doc = asciidocstring.parse(docstring)
+
+# Access summary and full description
+print(doc.summary)
+# "Calculate the Euclidean distance between two points."
+
+# Inspect parameters
+for param in doc.parameters:
+    print(f"{param.name} ({param.type_name}): optional={param.optional}, default={param.default}")
+    print(f"  {param.description}")
+
+# Inspect return types and exceptions
+for ret in doc.returns:
+    print(f"Returns {ret.type_name}: {ret.description}")
+
+for exc in doc.raises:
+    print(f"Raises {exc.type_name}: {exc.description}")
+----
+
+=== Griffe Ingestion & Conversion
+
+Ingest and convert docstrings written in Google, NumPy, or Sphinx conventions into AsciiDoc markup and `AsciiDocStringDocument` models:
+
+[source,python]
+----
+import asciidocstring
+
+google_docstring = """
+    Fetch data from a remote endpoint.
+
+    Args:
+        url (str): The destination URL.
+        timeout (int, optional): Timeout in seconds. Defaults to 30.
+
+    Returns:
+        dict: The JSON response payload.
+
+    Raises:
+        ConnectionError: If connection fails.
+"""
+
+# Parse Google/NumPy/Sphinx docstrings using the Griffe bridge
+doc = asciidocstring.from_griffe(google_docstring, style="google")
+
+print(doc.summary)
+# "Fetch data from a remote endpoint."
+
+for param in doc.parameters:
+    print(f"{param.name} ({param.type_name}): {param.description} [default: {param.default}]")
+
+# Convert Griffe parsed sections directly to AsciiDoc markup
+from griffe import parse as parse_griffe, Docstring
+
+sections = parse_griffe(Docstring(google_docstring), "google")
+adoc_markup = asciidocstring.to_asciidoc(sections)
+print(adoc_markup)
 ----
 
 === Translation Comparison (AsciiDoc to reST)
@@ -228,6 +323,15 @@ Output:
 * `parse(docstring: str, safe_mode: bool = False) -> AsciiDocStringDocument` +
   Convenience function to parse a raw Python docstring.
 
+* `from_griffe(docstring: Union[Any, str], style: Literal["google", "numpy", "sphinx", "auto"] = "auto") -> AsciiDocStringDocument` +
+  Parse a docstring using Griffe's parser and return a parsed `AsciiDocStringDocument`.
+
+* `from_sections(sections: List[Any]) -> AsciiDocStringDocument` +
+  Convert a list of Griffe `DocstringSection` instances into an `AsciiDocStringDocument`.
+
+* `to_asciidoc(sections: List[Any]) -> str` +
+  Convert a list of Griffe `DocstringSection` instances into clean AsciiDoc markup.
+
 === Classes
 
 * `AsciiDocStringDocument` +
@@ -235,6 +339,74 @@ Output:
   ** `__init__(raw_source: str, safe_mode: bool = False)`: Cleans and parses the given docstring.
   ** `to_rest() -> str`: Renders the parsed document as standard Sphinx-compatible reStructuredText.
   ** `extract_tests(language: str = "python", requires_test_marker: bool = False) -> list[TestBlock]`: Extracts executable code blocks.
+  ** `summary` (str): One-line summary (the first paragraph of the docstring).
+  ** `description` (str): Full extended docstring description.
+  ** `parameters` (list[DocstringParam]): Documented parameters extracted from `[parameters]` description lists.
+  ** `returns` (list[DocstringReturn]): Documented return values extracted from `[returns]` description lists.
+  ** `yields` (list[DocstringYield]): Documented yield values extracted from `[yields]` description lists.
+  ** `raises` (list[DocstringRaise]): Documented exceptions extracted from `[raises]` description lists.
+  ** `receives` (list[DocstringReceive]): Documented generator receive specifications extracted from `[receives]` description lists.
+  ** `warns` (list[DocstringWarn]): Documented warnings extracted from `[warns]` description lists.
+  ** `attributes` (list[DocstringAttribute]): Documented class/module attributes extracted from `[attributes]` description lists.
+  ** `examples` (list[DocstringExample]): Extracted example and test code blocks.
+  ** `deprecated` (DocstringDeprecated | None): Deprecation notice extracted from `[deprecated]` admonitions/blocks.
+  ** `semantics` (SemanticExtractorVisitor): Cached visitor containing all parsed semantic entities.
+
+* `DocstringParam` +
+  Represents a documented function, method, or class parameter.
+  ** `name` (str): Parameter name.
+  ** `type_name` (str | None): Type annotation string.
+  ** `description` (str): Parameter description.
+  ** `default` (str | None): Default value string.
+  ** `optional` (bool): Whether parameter is optional.
+  ** `raw_entry` (Any | None): Optional raw AST node reference.
+
+* `DocstringReturn` +
+  Represents a return value specification.
+  ** `type_name` (str | None): Return type annotation string.
+  ** `description` (str): Return value description.
+  ** `name` (str | None): Optional return identifier.
+
+* `DocstringYield` +
+  Represents a yield value specification.
+  ** `type_name` (str | None): Yield type annotation string.
+  ** `description` (str): Yield value description.
+  ** `name` (str | None): Optional yield identifier.
+
+* `DocstringRaise` +
+  Represents a documented exception that may be raised.
+  ** `type_name` (str): Exception class or type name.
+  ** `description` (str): Exception condition description.
+
+* `DocstringReceive` +
+  Represents a generator receive specification.
+  ** `type_name` (str | None): Received type annotation string.
+  ** `description` (str): Received value description.
+
+* `DocstringWarn` +
+  Represents a warning that may be issued.
+  ** `type_name` (str | None): Warning category or class name.
+  ** `description` (str): Warning trigger description.
+
+* `DocstringAttribute` +
+  Represents a class or module attribute.
+  ** `name` (str): Attribute name.
+  ** `type_name` (str | None): Type annotation string.
+  ** `description` (str): Attribute description.
+  ** `value` (str | None): Initial or default value string.
+
+* `DocstringDeprecated` +
+  Represents a deprecation notice.
+  ** `version` (str | None): Deprecated version.
+  ** `reason` (str): Deprecation reason or migration note.
+
+* `DocstringExample` +
+  Represents an example or test code block.
+  ** `content` (str): Source code content.
+  ** `language` (str): Language identifier (e.g. `python`).
+  ** `line_number` (int): 1-based starting line number.
+  ** `is_interactive` (bool): True if containing interactive `>>>` prompts.
+  ** `attributes` (dict): Dictionary of block attributes.
 
 * `TestBlock` +
   Represents an extracted code block designed for execution or testing.

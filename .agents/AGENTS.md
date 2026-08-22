@@ -26,7 +26,7 @@ Keep the codebase strictly clean and typed:
 
 ## 2. Core Architecture
 
-The library processes Python docstrings written in AsciiDoc using a decoupled, two-stage architecture:
+The library processes Python docstrings written in AsciiDoc using a decoupled, multi-layer architecture:
 
 1. **Parser & Cleaning Layer (`src/asciidocstring/document.py`):**
    * Uses `inspect.cleandoc` to calculate and strip common leading whitespace from docstrings.
@@ -37,6 +37,13 @@ The library processes Python docstrings written in AsciiDoc using a decoupled, t
    * For docstring rendering, serializes the AST to reStructuredText (`ReSTSerializerVisitor`).
    * For doctests, queries and extracts executable code blocks (`TestBlockExtractorVisitor`).
 
+3. **Semantic Models & Extractor Layer (`src/asciidocstring/semantics.py`, `src/asciidocstring/models.py`):**
+   * Subclasses `NodeVisitor` (`SemanticExtractorVisitor`) to traverse the ASG and populate structured semantic dataclasses (`DocstringParam`, `DocstringReturn`, `DocstringYield`, `DocstringRaise`, `DocstringReceive`, `DocstringWarn`, `DocstringAttribute`, `DocstringDeprecated`, `DocstringExample`).
+   * Automatically extracts and normalizes parameter types, default values, optional markers, return annotations, and deprecation details.
+
+4. **Griffe Bridge Layer (`src/asciidocstring/griffe_bridge.py`):**
+   * Ingests and converts Griffe docstring representations across Google, NumPy, and Sphinx docstring conventions into AsciiDoc markup (`to_asciidoc`) and `AsciiDocStringDocument` instances (`from_griffe`, `from_sections`).
+
 ---
 
 ## 3. Reference Commands
@@ -44,7 +51,7 @@ The library processes Python docstrings written in AsciiDoc using a decoupled, t
 ```bash
 # Set up environment
 python3 -m venv venv
-venv/bin/pip install -e .
+venv/bin/pip install -e ".[test,lint,griffe]"
 
 # Run test suite
 PYTHONPATH=src venv/bin/pytest
@@ -73,7 +80,7 @@ Before building, packaging, or uploading a new release to PyPI, every agent MUST
    ```bash
    venv/bin/ruff check src/ tests/ && venv/bin/mypy src/
    ```
-3. [ ] **Measure Coverage**: Run the test suite and verify coverage does not regress from our **99%** baseline:
+3. [ ] **Measure Coverage**: Run the test suite and verify coverage does not regress from our **100%** baseline:
    ```bash
    PYTHONPATH=src venv/bin/pytest --cov=src --cov-report=term-missing
    ```

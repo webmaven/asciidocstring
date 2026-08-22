@@ -6,7 +6,14 @@ from .document import AsciiDocStringDocument, parse
 
 
 def to_asciidoc(sections: List[Any]) -> str:
-    """Convert a list of Griffe DocstringSection objects into clean AsciiDoc markup."""
+    """Convert a list of Griffe DocstringSection objects into clean AsciiDoc markup.
+
+    Args:
+        sections: A list of Griffe `DocstringSection` instances.
+
+    Returns:
+        A string containing formatted AsciiDoc markup representing the sections.
+    """
     blocks: List[str] = []
 
     for section in sections:
@@ -98,7 +105,14 @@ def to_asciidoc(sections: List[Any]) -> str:
 
 
 def from_sections(sections: List[Any]) -> AsciiDocStringDocument:
-    """Convert Griffe DocstringSection items to an AsciiDocStringDocument."""
+    """Convert Griffe DocstringSection items to an AsciiDocStringDocument.
+
+    Args:
+        sections: A list of Griffe `DocstringSection` instances.
+
+    Returns:
+        An `AsciiDocStringDocument` representing the converted sections.
+    """
     adoc_text = to_asciidoc(sections)
     return parse(adoc_text)
 
@@ -107,7 +121,18 @@ def from_griffe(
     docstring: Union[Any, str],
     style: Literal["google", "numpy", "sphinx", "auto"] = "auto",
 ) -> AsciiDocStringDocument:
-    """Parse docstring using Griffe static parser and return AsciiDocStringDocument."""
+    """Parse docstring using Griffe static parser and return AsciiDocStringDocument.
+
+    Args:
+        docstring: A raw docstring string or a `griffe.Docstring` instance.
+        style: Docstring convention style ("google", "numpy", "sphinx", or "auto").
+
+    Returns:
+        An `AsciiDocStringDocument` containing parsed semantic models and AST.
+
+    Raises:
+        ImportError: If `griffe` is not installed.
+    """
     try:
         import griffe
     except ImportError as e:

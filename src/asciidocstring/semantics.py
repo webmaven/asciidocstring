@@ -47,6 +47,7 @@ class SemanticExtractorVisitor(NodeVisitor):
         self._current_role: str = ""
 
     def extract(self, ast: Any) -> "SemanticExtractorVisitor":
+        """Walk the AST to extract and populate semantic docstring components."""
         self.visit(ast)
         if self._leading_paragraphs:
             self.summary = self._leading_paragraphs[0]

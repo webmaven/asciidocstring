@@ -1,3 +1,5 @@
+"""AST visitors for reStructuredText serialization and doctest extraction."""
+
 from dataclasses import dataclass
 from typing import Any, Dict, List
 

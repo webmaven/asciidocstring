@@ -1,3 +1,5 @@
+"""Document parser and primary AsciiDocStringDocument interface."""
+
 import inspect
 import warnings
 from typing import TYPE_CHECKING, Any, List
@@ -129,6 +131,7 @@ class AsciiDocStringDocument:
 
     @property
     def semantics(self) -> "SemanticExtractorVisitor":
+        """Semantic extractor visitor holding all parsed docstring models."""
         if self._semantics_cache is None:
             from .semantics import SemanticExtractorVisitor
 
@@ -138,46 +141,57 @@ class AsciiDocStringDocument:
 
     @property
     def summary(self) -> str:
+        """One-line summary (the first paragraph of the docstring)."""
         return self.semantics.summary
 
     @property
     def description(self) -> str:
+        """Full extended description of the docstring."""
         return self.semantics.description
 
     @property
     def parameters(self) -> list[DocstringParam]:
+        """List of documented parameters extracted from the docstring."""
         return self.semantics.parameters
 
     @property
     def returns(self) -> list[DocstringReturn]:
+        """List of documented return value specifications."""
         return self.semantics.returns
 
     @property
     def yields(self) -> list[DocstringYield]:
+        """List of documented yield value specifications."""
         return self.semantics.yields
 
     @property
     def raises(self) -> list[DocstringRaise]:
+        """List of documented exceptions that may be raised."""
         return self.semantics.raises
 
     @property
     def receives(self) -> list[DocstringReceive]:
+        """List of documented generator receive specifications."""
         return self.semantics.receives
 
     @property
     def warns(self) -> list[DocstringWarn]:
+        """List of documented warnings that may be issued."""
         return self.semantics.warns
 
     @property
     def attributes(self) -> list[DocstringAttribute]:
+        """List of documented class or module attributes."""
         return self.semantics.attributes
 
     @property
     def examples(self) -> list[DocstringExample]:
+        """List of example and test code blocks extracted from the docstring."""
         return self.semantics.examples
 
     @property
     def deprecated(self) -> DocstringDeprecated | None:
+        """Deprecation notice if present, otherwise None."""
         return self.semantics.deprecated
 
 

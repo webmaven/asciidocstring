@@ -21,6 +21,8 @@ source venv/bin/activate
 pip install -e ".[test,lint]"
 ```
 
+> **Note:** The `test` extra includes `griffe>=1.0.0` for full bridge testing. You can also install the standalone Griffe integration via `pip install -e ".[griffe]"`.
+
 ---
 
 ## 2. Development Workflow: Red / Green TDD
