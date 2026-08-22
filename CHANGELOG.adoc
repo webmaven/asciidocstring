@@ -5,16 +5,26 @@ This document details all notable changes and releases for `asciidocstring`.
 
 == [Unreleased]
 
+---
+
+== [0.1.0a7] - 2026-08-22
+
 === Added
 * **Semantic AST Parsing & Structured Docstring Querying**: Added structured docstring semantic models (`DocstringParam`, `DocstringReturn`, `DocstringYield`, `DocstringRaise`, `DocstringReceive`, `DocstringWarn`, `DocstringAttribute`, `DocstringDeprecated`, `DocstringExample`) and `SemanticExtractorVisitor` to inspect and extract structured parameters, return types, exceptions, yield/receive types, warnings, attributes, examples, deprecations, summaries, and descriptions (Issue https://github.com/webmaven/asciidocstring/issues/3[#3]).
 * **AsciiDocStringDocument Semantic Properties**: Exposed direct access properties on `AsciiDocStringDocument` (`summary`, `description`, `parameters`, `returns`, `yields`, `raises`, `receives`, `warns`, `attributes`, `deprecated`, `examples`) for effortless semantic docstring querying.
-* **Griffe Ingestion Bridge**: Added `from_griffe`, `from_sections`, and `to_asciidoc` in `asciidocstring.griffe_bridge` to seamlessly bridge Griffe `DocstringSection` structures into `AsciiDocStringDocument` representations (Issue https://github.com/webmaven/asciidocstring/issues/4[#4]).
+* **Griffe Ingestion Bridge**: Added `from_griffe`, `from_sections`, and `to_asciidoc` in `asciidocstring.griffe_bridge` to seamlessly bridge Griffe `DocstringSection` structures across Google, NumPy, and Sphinx conventions into `AsciiDocStringDocument` representations (Issue https://github.com/webmaven/asciidocstring/issues/4[#4]).
+* **Developer Experience Enhancements**:
+  ** Dual-sided parameter type parsing: supports type annotations on both Left-Hand Side terms (`` `x` (float):: ``) and Right-Hand Side descriptions (`` `x`:: (`float`) ``).
+  ** Multi-syntax default value parsing: supports `Defaults to X`, `default is X`, `default=X`, `defaults: X`, etc., properly preserving floats, dotted paths, and quoted literals.
+  ** Safe-mode semantic fallback: returns clean fallback values (`""`, `[]`, `None`) on malformed docstrings under `safe_mode=True`.
+  ** Interactive ergonomics: added descriptive `__repr__` and `__str__` to `AsciiDocStringDocument`.
+  ** Contributor onboarding: added `[project.optional-dependencies.dev]` combining test, lint, and griffe tooling.
 
 === Upgraded
 * Bumped minimum `asciidoctrine` dependency constraint to `>=0.2.0a2` in `pyproject.toml`.
 
 === Metrics
-* Maintained **100% total code coverage** across all library modules.
+* Maintained **100% total code coverage** across all library modules (646/646 statements).
 
 ---
 
