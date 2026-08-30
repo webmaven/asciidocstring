@@ -67,6 +67,12 @@ mypy src/
 
 * **Bare-URL Autolinks (Issue [#76](https://github.com/webmaven/asciidoctrine/issues/76)):** Resolved in `asciidoctrine>=0.1.0a11`. Bare URLs (such as `https://google.com`) are now correctly parsed as `Ref` nodes and rendered as proper reST hyperlinks.
 * **Consecutive Attributed Description Lists (Issue [#96](https://github.com/webmaven/asciidoctrine/issues/96)):** Resolved in `asciidoctrine>=0.2.0a2`. Consecutive description lists with distinct block attributes (e.g. `[parameters]`, `[returns]`) are now parsed as distinct `DescriptionList` blocks in the AST and retain their attributes.
+* **Mid-identifier Emphasis Boundary (Issue [#97](https://github.com/webmaven/asciidoctrine/issues/97)):** Resolved in `asciidoctrine>=0.2.0a3`. Identifiers containing underscores (e.g. `some_function_name`) no longer incorrectly trigger constrained inline emphasis, preventing identifiers from being fragmented into text and emphasis AST nodes.
+* **Memoized Parser Engine (asciidoctrine 0.2.0a3):** Implemented in `asciidoctrine>=0.2.0a3`. Compiled `Lark` parser instances are now cached across `parse_to_ast` calls, yielding a **~33x speedup** on repeated and batch docstring parsing.
+* **Verbatim Block Table Cell Protection (Issue [#116](https://github.com/webmaven/asciidoctrine/issues/116)):** Resolved in `asciidoctrine>=0.2.0a4`. Verbatim blocks (`Listing`, `Literal`, `Passthrough`, `Comment`) containing table delimiters (`|===`) or cell pipes no longer break into invalid table nodes.
+* **Inline Monospace Backtick Boundary (Issue [#117](https://github.com/webmaven/asciidoctrine/issues/117)):** Resolved in `asciidoctrine>=0.2.0a4`. Multiple inline code spans (`` `hook_0`, `hook_1`, `hook_2`, `hook_3` ``) on a single line no longer invert span grouping.
+* **Block Title Attachment Preceded by Another Block (Issue [#119](https://github.com/webmaven/asciidoctrine/issues/119)):** Resolved in `asciidoctrine>=0.2.0a5`. Block title lines (`.Title`) preceded by another block are now correctly attached to subsequent blocks (listings, admonitions, tables) rather than being parsed as standalone paragraphs.
+* **Inline Macros Attached to Preceding Words/Punctuation (Issue [#120](https://github.com/webmaven/asciidoctrine/issues/120)):** Resolved in `asciidoctrine>=0.2.0a5`. Inline macros (`footnote:[...]`, `kbd:[...]`, `pass:[...]`, URI schemes) attached directly to preceding text without whitespace (e.g. `statement.footnote:[Note text]`) now parse correctly.
 
 
 ---
