@@ -6,15 +6,20 @@ from typing import Any
 
 @dataclass
 class DocstringParam:
-    """Represents a documented function, method, or class parameter.
+    """Represent a documented function, method, or class parameter.
 
-    Attributes:
-        name: Name of the parameter.
-        type_name: Optional type annotation string.
-        description: Text description of the parameter.
-        default: Optional default value representation string.
-        optional: Whether the parameter is marked optional.
-        raw_entry: Optional raw parsed AST node or term reference.
+    [attributes]
+    `name` (str):: Name of the parameter.
+    `type_name` (str, optional)::
+        Optional type annotation string. Defaults to `None`.
+    `description` (str)::
+        Text description of the parameter. Defaults to `""`.
+    `default` (str, optional)::
+        Optional default value representation string. Defaults to `None`.
+    `optional` (bool)::
+        Whether the parameter is marked optional. Defaults to `False`.
+    `raw_entry` (Any, optional)::
+        Optional raw parsed AST node or term reference. Defaults to `None`.
     """
 
     name: str
@@ -27,12 +32,15 @@ class DocstringParam:
 
 @dataclass
 class DocstringReturn:
-    """Represents a return value specification.
+    """Represent a return value specification.
 
-    Attributes:
-        type_name: Optional type annotation string of the return value.
-        description: Text description of the return value.
-        name: Optional identifier or label for the return value.
+    [attributes]
+    `type_name` (str, optional)::
+        Optional type annotation string of the return value. Defaults to `None`.
+    `description` (str)::
+        Text description of the return value. Defaults to `""`.
+    `name` (str, optional)::
+        Optional identifier or label for the return value. Defaults to `None`.
     """
 
     type_name: str | None = None
@@ -42,12 +50,15 @@ class DocstringReturn:
 
 @dataclass
 class DocstringYield:
-    """Represents a yield value specification.
+    """Represent a yield value specification.
 
-    Attributes:
-        type_name: Optional type annotation string of the yield value.
-        description: Text description of the yield value.
-        name: Optional identifier or label for the yield value.
+    [attributes]
+    `type_name` (str, optional)::
+        Optional type annotation string of the yield value. Defaults to `None`.
+    `description` (str)::
+        Text description of the yield value. Defaults to `""`.
+    `name` (str, optional)::
+        Optional identifier or label for the yield value. Defaults to `None`.
     """
 
     type_name: str | None = None
@@ -57,11 +68,12 @@ class DocstringYield:
 
 @dataclass
 class DocstringRaise:
-    """Represents a documented exception that may be raised.
+    """Represent a documented exception that may be raised.
 
-    Attributes:
-        type_name: Exception class or type name.
-        description: Circumstances under which the exception is raised.
+    [attributes]
+    `type_name` (str):: Exception class or type name.
+    `description` (str)::
+        Circumstances under which the exception is raised. Defaults to `""`.
     """
 
     type_name: str
@@ -70,11 +82,13 @@ class DocstringRaise:
 
 @dataclass
 class DocstringReceive:
-    """Represents a generator receive specification.
+    """Represent a generator receive specification.
 
-    Attributes:
-        type_name: Optional type annotation string of the received value.
-        description: Text description of the received value.
+    [attributes]
+    `type_name` (str, optional)::
+        Optional type annotation string of the received value. Defaults to `None`.
+    `description` (str)::
+        Text description of the received value. Defaults to `""`.
     """
 
     type_name: str | None = None
@@ -83,11 +97,13 @@ class DocstringReceive:
 
 @dataclass
 class DocstringWarn:
-    """Represents a warning that may be issued.
+    """Represent a warning that may be issued.
 
-    Attributes:
-        type_name: Optional warning category or class name.
-        description: Circumstances under which the warning is issued.
+    [attributes]
+    `type_name` (str, optional)::
+        Optional warning category or class name. Defaults to `None`.
+    `description` (str)::
+        Circumstances under which the warning is issued. Defaults to `""`.
     """
 
     type_name: str | None = None
@@ -96,13 +112,16 @@ class DocstringWarn:
 
 @dataclass
 class DocstringAttribute:
-    """Represents a class or module attribute.
+    """Represent a class or module attribute.
 
-    Attributes:
-        name: Name of the attribute.
-        type_name: Optional type annotation string.
-        description: Text description of the attribute.
-        value: Optional initial or default value.
+    [attributes]
+    `name` (str):: Name of the attribute.
+    `type_name` (str, optional)::
+        Optional type annotation string. Defaults to `None`.
+    `description` (str)::
+        Text description of the attribute. Defaults to `""`.
+    `value` (str, optional)::
+        Optional initial or default value. Defaults to `None`.
     """
 
     name: str
@@ -113,11 +132,13 @@ class DocstringAttribute:
 
 @dataclass
 class DocstringDeprecated:
-    """Represents a deprecation notice.
+    """Represent a deprecation notice.
 
-    Attributes:
-        version: Version in which the feature was or will be deprecated.
-        reason: Explanation or migration guidance for the deprecation.
+    [attributes]
+    `version` (str, optional)::
+        Version in which the feature was or will be deprecated. Defaults to `None`.
+    `reason` (str)::
+        Explanation or migration guidance for the deprecation. Defaults to `""`.
     """
 
     version: str | None = None
@@ -126,14 +147,18 @@ class DocstringDeprecated:
 
 @dataclass
 class DocstringExample:
-    """Represents an example or test code block.
+    """Represent an example or test code block.
 
-    Attributes:
-        content: Code contents of the example block.
-        language: Programming or markup language of the block (default: "python").
-        line_number: Starting line number of the block in the docstring.
-        is_interactive: True if the code block contains interactive `>>>` prompts.
-        attributes: Dictionary of raw block attributes from the AsciiDoc AST.
+    [attributes]
+    `content` (str):: Code contents of the example block.
+    `language` (str, optional)::
+        Programming or markup language of the block. Defaults to `"python"`.
+    `line_number` (int, optional)::
+        Starting line number of the block in the docstring. Defaults to `1`.
+    `is_interactive` (bool, optional)::
+        True if the code block contains interactive `>>>` prompts. Defaults to `False`.
+    `attributes` (dict[str, Any], optional)::
+        Dictionary of raw block attributes from the AsciiDoc AST. Defaults to `{}`.
     """
 
     content: str
@@ -145,4 +170,3 @@ class DocstringExample:
 
 # Harmonize TestBlock and DocstringExample
 TestBlock = DocstringExample
-
