@@ -26,7 +26,16 @@ if TYPE_CHECKING:
 
 
 class AsciiDocStringParseError(ValueError):
-    """Raised when parsing of an AsciiDoc docstring fails."""
+    """Raised when parsing of an AsciiDoc docstring fails.
+
+    [attributes]
+    `line` (int, optional)::
+        Line number where the syntax error occurred. Defaults to `None`.
+    `column` (int, optional)::
+        Column offset where the error occurred. Defaults to `None`.
+    `context` (str, optional)::
+        Contextual source snippet around the error. Defaults to `None`.
+    """
 
     def __init__(
         self,
@@ -42,13 +51,52 @@ class AsciiDocStringParseError(ValueError):
 
 
 class AsciiDocStringWarning(UserWarning):
-    """Warning raised when parsing of an AsciiDoc docstring fails under safe-mode."""
+    """Warning issued when docstring parsing fails while running under `safe_mode`.
+
+    Enables non-fatal parsing recovery and diagnostics during safe-mode execution.
+    """
 
 
 class AsciiDocStringDocument:
-    """The main interface representing a parsed AsciiDoc docstring."""
+    """Primary interface representing a parsed AsciiDoc docstring document.
+
+    Provides access to the underlying Abstract Semantic Graph (ASG) AST,
+    structured semantic models (parameters, returns, exceptions, yields,
+    and attributes), reStructuredText rendering, and doctest extraction.
+
+    [source,python]
+    ----
+    import asciidocstring
+
+    doc = asciidocstring.parse('''
+        Compute the sum of two integers.
+
+        [parameters]
+        `a` (int):: The first integer operand.
+        `b` (int):: The second integer operand.
+
+        [returns]
+        `int`:: Sum of `a` and `b`.
+    ''')
+    assert doc.summary == "Compute the sum of two integers."
+    assert len(doc.parameters) == 2
+    ----
+    """
 
     def __init__(self, raw_source: str, safe_mode: bool = False):
+        """Initialize and parse an AsciiDoc docstring document.
+
+        [parameters]
+        `raw_source` (str)::
+            Raw docstring text, potentially with leading indentation.
+        `safe_mode` (bool, optional)::
+            If `True`, catch parse errors and emit warnings instead of raising.
+            Defaults to `False`.
+
+        [raises]
+        `AsciiDocStringParseError`::
+            If parsing fails and `safe_mode` is `False`.
+        """
         self.raw_source = raw_source
         self.safe_mode = safe_mode
         self._semantics_cache: Any = None
@@ -128,20 +176,48 @@ class AsciiDocStringDocument:
         )
 
     def to_rest(self) -> str:
-        """Render parsed ASG into standard reStructuredText."""
+        """Render parsed ASG into standard reStructuredText.
+
+        [source,python]
+        ----
+        doc = asciidocstring.parse("A simple docstring.")
+        rest_output = doc.to_rest()
+        assert "A simple docstring." in rest_output
+        ----
+
+        [returns]
+        `str`:: Serialized reStructuredText representation for Sphinx and docutils.
+        """
         visitor = ReSTSerializerVisitor()
         return visitor.serialize(self.ast)
 
     def extract_tests(
         self, language: str = "python", requires_test_marker: bool = False
     ) -> List[TestBlock]:
-        """Extract executable code blocks from the parsed AST."""
+        """Extract executable code blocks from the parsed AST.
+
+        [parameters]
+        `language` (str, optional)::
+            Programming language filter for listing blocks. Defaults to `"python"`.
+        `requires_test_marker` (bool, optional)::
+            When `True`, only extract code blocks tagged with
+            `[source,python,test]` or `[.test]`. Defaults to `False`.
+
+        [returns]
+        `list[TestBlock]`::
+            Extracted test blocks with code content, line numbers, and flags.
+        """
         visitor = TestBlockExtractorVisitor(language, requires_test_marker)
         return visitor.extract(self.ast)
 
     @property
     def semantics(self) -> "SemanticExtractorVisitor":
-        """Semantic extractor visitor holding all parsed docstring models."""
+        """Semantic extractor visitor holding all parsed docstring models.
+
+        [returns]
+        `SemanticExtractorVisitor`::
+            The visitor containing populated semantic collections.
+        """
         if self._semantics_cache is None:
             from .semantics import SemanticExtractorVisitor
 
@@ -153,84 +229,163 @@ class AsciiDocStringDocument:
 
     @property
     def summary(self) -> str:
-        """One-line summary (the first paragraph of the docstring)."""
+        """One-line summary extracted as the first paragraph of the docstring.
+
+        [returns]
+        `str`:: The first paragraph text, or an empty string if parse failed.
+        """
         if self._parse_failed:
             return ""
         return self.semantics.summary
 
     @property
     def description(self) -> str:
-        """Full extended description of the docstring."""
+        """Full extended description of the docstring.
+
+        [returns]
+        `str`:: Leading description paragraphs, or an empty string if parse failed.
+        """
         if self._parse_failed:
             return ""
         return self.semantics.description
 
     @property
     def parameters(self) -> list[DocstringParam]:
-        """List of documented parameters extracted from the docstring."""
+        """List of documented parameters extracted from the docstring.
+
+        [returns]
+        `list[DocstringParam]`:: Documented parameters with names, types, and defaults.
+        """
         if self._parse_failed:
             return []
         return self.semantics.parameters
 
     @property
     def returns(self) -> list[DocstringReturn]:
-        """List of documented return value specifications."""
+        """List of documented return value specifications.
+
+        [returns]
+        `list[DocstringReturn]`:: Return value annotations and descriptions.
+        """
         if self._parse_failed:
             return []
         return self.semantics.returns
 
     @property
     def yields(self) -> list[DocstringYield]:
-        """List of documented yield value specifications."""
+        """List of documented yield value specifications.
+
+        [returns]
+        `list[DocstringYield]`:: Generator yield specifications.
+        """
         if self._parse_failed:
             return []
         return self.semantics.yields
 
     @property
     def raises(self) -> list[DocstringRaise]:
-        """List of documented exceptions that may be raised."""
+        """List of documented exceptions that may be raised.
+
+        [returns]
+        `list[DocstringRaise]`:: Exception types and trigger conditions.
+        """
         if self._parse_failed:
             return []
         return self.semantics.raises
 
     @property
     def receives(self) -> list[DocstringReceive]:
-        """List of documented generator receive specifications."""
+        """List of documented generator receive specifications.
+
+        [returns]
+        `list[DocstringReceive]`:: Generator receive types and descriptions.
+        """
         if self._parse_failed:
             return []
         return self.semantics.receives
 
     @property
     def warns(self) -> list[DocstringWarn]:
-        """List of documented warnings that may be issued."""
+        """List of documented warnings that may be issued.
+
+        [returns]
+        `list[DocstringWarn]`:: Warning categories and trigger descriptions.
+        """
         if self._parse_failed:
             return []
         return self.semantics.warns
 
     @property
     def attributes(self) -> list[DocstringAttribute]:
-        """List of documented class or module attributes."""
+        """List of documented class or module attributes.
+
+        [returns]
+        `list[DocstringAttribute]`:: Attributes with names, types, and descriptions.
+        """
         if self._parse_failed:
             return []
         return self.semantics.attributes
 
     @property
     def examples(self) -> list[DocstringExample]:
-        """List of example and test code blocks extracted from the docstring."""
+        """List of example and test code blocks extracted from the docstring.
+
+        [returns]
+        `list[DocstringExample]`:: Source code example blocks.
+        """
         if self._parse_failed:
             return []
         return self.semantics.examples
 
     @property
     def deprecated(self) -> DocstringDeprecated | None:
-        """Deprecation notice if present, otherwise None."""
+        """Deprecation notice if present, otherwise None.
+
+        [returns]
+        `DocstringDeprecated | None`::
+            Deprecation notice with version and reason, or `None`.
+        """
         if self._parse_failed:
             return None
         return self.semantics.deprecated
 
 
-
 def parse(docstring: str, safe_mode: bool = False) -> AsciiDocStringDocument:
-    """Convenience function to parse a raw python docstring."""
-    return AsciiDocStringDocument(docstring, safe_mode=safe_mode)
+    """Parse a raw Python docstring written in AsciiDoc.
 
+    Convenience entrypoint that cleans leading docstring indentation, parses
+    the AsciiDoc markup into an AST, and prepares semantic extractors.
+
+    [source,python]
+    ----
+    import asciidocstring
+
+    doc = asciidocstring.parse('''
+        Calculate hypotenuse length.
+
+        [parameters]
+        `a` (float):: First side length.
+        `b` (float):: Second side length.
+
+        [returns]
+        `float`:: Hypotenuse length.
+    ''')
+    assert doc.summary == "Calculate hypotenuse length."
+    ----
+
+    [parameters]
+    `docstring` (str)::
+        Raw docstring string to clean and parse.
+    `safe_mode` (bool, optional)::
+        If `True`, catch parse errors and emit warnings instead of raising.
+        Defaults to `False`.
+
+    [returns]
+    `AsciiDocStringDocument`::
+        Parsed document representation ready for querying.
+
+    [raises]
+    `AsciiDocStringParseError`::
+        If syntax or parsing fails and `safe_mode` is `False`.
+    """
+    return AsciiDocStringDocument(docstring, safe_mode=safe_mode)
