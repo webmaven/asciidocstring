@@ -15,15 +15,39 @@ __all__ = [
 
 
 class TestBlockExtractorVisitor(NodeVisitor):
-    """AST visitor to locate and extract Python test blocks from a docstring."""
+    """AST visitor to locate and extract Python test blocks from a docstring.
 
-    def __init__(self, target_language: str, requires_test_marker: bool):
+    Traverses the AsciiDoc AST looking for source code listings matching the
+    target language, filtering by test markers when configured.
+
+    [attributes]
+    `target_language` (str):: Normalized lowercase language identifier.
+    `requires_test_marker` (bool):: Flag indicating if test markers are required.
+    `extracted_tests` (list[TestBlock]):: Accumulated list of extracted test
+      blocks.
+    """
+
+    def __init__(self, target_language: str, requires_test_marker: bool) -> None:
+        """Initialize a new test block extractor visitor instance.
+
+        [parameters]
+        `target_language` (str):: Target programming language identifier to filter.
+        `requires_test_marker` (bool):: If `True`, only listings with explicit test
+          markers are extracted.
+        """
         self.target_language = target_language.lower()
         self.requires_test_marker = requires_test_marker
         self.extracted_tests: List[TestBlock] = []
 
     def extract(self, node: Any) -> List[TestBlock]:
-        """Reset state, traverse the node tree, and return extracted test blocks."""
+        """Reset state, traverse the node tree, and return extracted test blocks.
+
+        [parameters]
+        `node` (Any):: The root AST node or document node to traverse.
+
+        [returns]
+        `list[TestBlock]`:: List of extracted test code blocks matching criteria.
+        """
         self.extracted_tests = []
         self.visit(node)
         return self.extracted_tests
@@ -78,7 +102,11 @@ class TestBlockExtractorVisitor(NodeVisitor):
 
 
 class ReSTSerializerVisitor(NodeVisitor):
-    """AST visitor to serialize parsed AsciiDoc to reStructuredText."""
+    """AST visitor to serialize parsed AsciiDoc to reStructuredText.
+
+    Walks the asciidoctrine AST hierarchy and constructs Sphinx-compatible
+    reStructuredText output with proper section adornments and directive syntax.
+    """
 
     def __init__(self) -> None:
         self.output: List[str] = []
@@ -88,7 +116,20 @@ class ReSTSerializerVisitor(NodeVisitor):
         self._footnote_ids: set[str] = set()
 
     def serialize(self, node: Any) -> str:
-        """Reset state, walk AST, and return reST representation."""
+        """Reset state, walk AST, and return reST representation.
+
+        [parameters]
+        `node` (Any):: The root AST node or document hierarchy to serialize.
+
+        [returns]
+        `str`:: Sphinx-compatible reStructuredText string.
+
+        [source,python]
+        ----
+        visitor = ReSTSerializerVisitor()
+        rest_text = visitor.serialize(parsed_ast)
+        ----
+        """
         self.output = []
         self._indent_level = 0
         self._current_list_depth = 0
@@ -109,7 +150,14 @@ class ReSTSerializerVisitor(NodeVisitor):
         return "".join(self.output).rstrip() + "\n"
 
     def render_inline(self, node: Any) -> str:
-        """Recursively render inline nodes and format their styles."""
+        """Recursively render inline nodes and format their styles.
+
+        [parameters]
+        `node` (Any):: Inline AST node to render as formatted text.
+
+        [returns]
+        `str`:: Formatted reStructuredText inline string representation.
+        """
         if node.name == "text":
             return str(node.value)
         elif node.name == "span":

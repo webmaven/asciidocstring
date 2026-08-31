@@ -28,9 +28,51 @@ from .models import (
 
 
 class SemanticExtractorVisitor(NodeVisitor):
-    """AST visitor to inspect and extract structured semantic components."""
+    """AST visitor to inspect and extract structured semantic components.
+
+    Walks an asciidoctrine AST hierarchy to extract structured docstring
+    elements such as parameters, returns, yields, raises, receives, warns,
+    attributes, deprecation notices, and code examples.
+
+    [attributes]
+    `summary` (str):: First paragraph summary of the docstring.
+    `description` (str):: Full leading description paragraphs.
+    `parameters` (list[DocstringParam]):: Extracted parameter definitions.
+    `returns` (list[DocstringReturn]):: Extracted return value definitions.
+    `yields` (list[DocstringYield]):: Extracted generator yield definitions.
+    `raises` (list[DocstringRaise]):: Extracted exception definitions.
+    `receives` (list[DocstringReceive]):: Extracted generator receive definitions.
+    `warns` (list[DocstringWarn]):: Extracted warning definitions.
+    `attributes` (list[DocstringAttribute]):: Extracted attribute definitions.
+    `examples` (list[DocstringExample]):: Extracted code example blocks.
+    `deprecated` (DocstringDeprecated | None, optional):: Extracted deprecation
+      notice if present. Defaults to `None`.
+
+    [source,python]
+    ----
+    visitor = SemanticExtractorVisitor()
+    visitor.extract(ast_node)
+    print(visitor.summary)
+    ----
+    """
 
     def __init__(self) -> None:
+        """Initialize a new semantic extractor visitor instance.
+
+        [attributes]
+        `summary` (str):: First paragraph summary initialized to empty string.
+        `description` (str):: Full leading description initialized to empty string.
+        `parameters` (list[DocstringParam]):: Parameter list initialized to empty.
+        `returns` (list[DocstringReturn]):: Return list initialized to empty.
+        `yields` (list[DocstringYield]):: Yield list initialized to empty.
+        `raises` (list[DocstringRaise]):: Raise list initialized to empty.
+        `receives` (list[DocstringReceive]):: Receive list initialized to empty.
+        `warns` (list[DocstringWarn]):: Warning list initialized to empty.
+        `attributes` (list[DocstringAttribute]):: Attribute list initialized to empty.
+        `examples` (list[DocstringExample]):: Example list initialized to empty.
+        `deprecated` (DocstringDeprecated | None, optional):: Deprecation notice.
+          Defaults to `None`.
+        """
         self.summary: str = ""
         self.description: str = ""
         self.parameters: list[DocstringParam] = []
@@ -47,7 +89,21 @@ class SemanticExtractorVisitor(NodeVisitor):
         self._current_role: str = ""
 
     def extract(self, ast: Any) -> "SemanticExtractorVisitor":
-        """Walk the AST to extract and populate semantic docstring components."""
+        """Walk the AST to extract and populate semantic docstring components.
+
+        [parameters]
+        `ast` (Any):: Parsed asciidoctrine AST root or document node to traverse.
+
+        [returns]
+        `SemanticExtractorVisitor`:: The visitor instance populated with
+          extracted semantic components.
+
+        [source,python]
+        ----
+        visitor = SemanticExtractorVisitor().extract(parsed_ast)
+        params = visitor.parameters
+        ----
+        """
         self.visit(ast)
         if self._leading_paragraphs:
             self.summary = self._leading_paragraphs[0]
