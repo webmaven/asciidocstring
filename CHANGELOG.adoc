@@ -4,15 +4,19 @@
 This document details all notable changes and releases for `asciidocstring`.
 
 == [Unreleased]
-
+ 
+---
+ 
+== [0.1.0a8] - 2026-08-30
+ 
 === Added
 * **Python Docstring Style Guide**: Added link:DOCSTRINGS.adoc[DOCSTRINGS.adoc], a comprehensive, production-grade guide and specification for writing Python docstrings in AsciiDoc covering structure, all semantic sections (parameters, returns, yields, receives, raises, warns, attributes, deprecation, examples), LHS and RHS type annotations, default value syntaxes, rich inline formatting, doctests, real-world examples, and best practices.
 * **AsciiDoc Public API Docstrings**: Upgraded docstrings across all library modules (`document.py`, `griffe_bridge.py`, `models.py`, `visitors.py`, `semantics.py`, `__init__.py`) to high-quality AsciiDoc format conforming to link:DOCSTRINGS.adoc[DOCSTRINGS.adoc] and verified with self-parsing tests.
 * **AsciiDoctrine 0.2.0a5 Compatibility Tests**: Added test suite (`test_asciidoctrine_020a5_compat.py`) validating upstream resolutions for mid-identifier underscores (Issue #97), attached inline macros (Issue #120), block title attachment (Issue #119), multiple inline code spans (Issue #117), and Lark parser memoization.
-
+ 
 === Upgraded
 * Bumped minimum `asciidoctrine` dependency constraint to `>=0.2.0a5` in `pyproject.toml`.
-
+ 
 === Metrics
 * Maintained **100% total code coverage** across all library modules (646/646 statements, 90/90 tests passing).
 

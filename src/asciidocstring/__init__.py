@@ -62,7 +62,7 @@ from .models import (
     TestBlock,
 )
 
-__version__ = "0.1.0a7"
+__version__ = "0.1.0a8"
 __all__ = [
     "parse",
     "AsciiDocStringDocument",
