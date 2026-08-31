@@ -11,11 +11,32 @@ if TYPE_CHECKING:
 def to_asciidoc(sections: Sequence[Union["griffe.DocstringSection", Any]]) -> str:
     """Convert a list of Griffe DocstringSection objects into clean AsciiDoc markup.
 
-    Args:
-        sections: A list of Griffe `DocstringSection` instances.
+    Iterates over each section (``parameters``, ``returns``, ``yields``, ``raises``,
+    ``receives``, ``warns``, ``attributes``, ``examples``, ``deprecated``,
+    ``admonition``) and serializes it as an AsciiDoc block suitable for use
+    as a Python docstring or for round-trip ingestion by `asciidocstring.parse()`.
 
-    Returns:
-        A string containing formatted AsciiDoc markup representing the sections.
+    [source,python]
+    ----
+    import griffe
+    import asciidocstring
+
+    doc_obj = griffe.Docstring(
+        "Args:\\n    x (int): The input.\\nReturns:\\n    int: The result."
+    )
+    sections = griffe.parse(doc_obj, style="google")
+    adoc = asciidocstring.to_asciidoc(sections)
+    assert "[parameters]" in adoc
+    ----
+
+    [parameters]
+    `sections` (Sequence)::
+        A sequence of Griffe `DocstringSection` instances or compatible objects.
+
+    [returns]
+    `str`::
+        An AsciiDoc-formatted string representing the combined docstring sections,
+        ready for use with `parse()`.
     """
     blocks: list[str] = []
 
@@ -113,10 +134,28 @@ def from_sections(
 ) -> AsciiDocStringDocument:
     """Convert Griffe DocstringSection items to an AsciiDocStringDocument.
 
-    Args:
-        sections: A sequence of Griffe `DocstringSection` instances.
+    Takes a sequence of Griffe `DocstringSection` objects, serializes them to
+    AsciiDoc markup via `to_asciidoc()`, and parses the resulting text into an
+    `AsciiDocStringDocument`.
 
-    Returns:
+    [source,python]
+    ----
+    import griffe
+    import asciidocstring
+
+    doc_obj = griffe.Docstring("Args:\\n    x (str): A string input.")
+    sections = griffe.parse(doc_obj, style="google")
+    doc = asciidocstring.from_sections(sections)
+    assert len(doc.parameters) == 1
+    assert doc.parameters[0].name == "x"
+    ----
+
+    [parameters]
+    `sections` (Sequence)::
+        A sequence of Griffe `DocstringSection` instances or compatible objects.
+
+    [returns]
+    `AsciiDocStringDocument`::
         An `AsciiDocStringDocument` representing the converted sections.
     """
     adoc_text = to_asciidoc(sections)
@@ -127,18 +166,45 @@ def from_griffe(
     docstring: Union["griffe.Docstring", str],
     style: Literal["google", "numpy", "sphinx", "auto"] = "auto",
 ) -> AsciiDocStringDocument:
-
     """Parse docstring using Griffe static parser and return AsciiDocStringDocument.
 
-    Args:
-        docstring: A raw docstring string or a `griffe.Docstring` instance.
-        style: Docstring convention style ("google", "numpy", "sphinx", or "auto").
+    Accepts either a raw docstring string or a `griffe.Docstring` instance, parses
+    it using Griffe according to the specified style convention ("google", "numpy",
+    "sphinx", or "auto"), converts the extracted sections to AsciiDoc markup, and
+    returns a parsed `AsciiDocStringDocument`.
 
-    Returns:
+    [source,python]
+    ----
+    import griffe
+    import asciidocstring
+
+    # Ingest raw string with Google convention
+    doc1 = asciidocstring.from_griffe(
+        "Args:\\n    host (str): Destination.\\nReturns:\\n    bool: Success.",
+        style="google",
+    )
+    assert doc1.parameters[0].name == "host"
+
+    # Ingest griffe.Docstring instance with NumPy convention
+    d = griffe.Docstring("Parameters\\n----------\\nx : int\\n    Input integer.")
+    doc2 = asciidocstring.from_griffe(d, style="numpy")
+    assert doc2.parameters[0].name == "x"
+    ----
+
+    [parameters]
+    `docstring` (griffe.Docstring | str)::
+        A raw docstring string or a `griffe.Docstring` instance.
+    `style` (str, optional)::
+        Docstring convention style ("google", "numpy", "sphinx", or "auto").
+        Defaults to `"auto"`.
+
+    [returns]
+    `AsciiDocStringDocument`::
         An `AsciiDocStringDocument` containing parsed semantic models and AST.
 
-    Raises:
-        ImportError: If `griffe` is not installed.
+    [raises]
+    `ImportError`::
+        If `griffe` is not installed.
     """
     try:
         import griffe
