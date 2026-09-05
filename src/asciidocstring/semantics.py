@@ -160,7 +160,9 @@ class SemanticExtractorVisitor(NodeVisitor):
                     return "deprecated"
         return ""
 
-    def _parse_param_term(self, term_text: str, desc_text: str) -> DocstringParam:
+    def _parse_param_term(
+        self, term_text: str, desc_text: str, raw_entry: Any = None
+    ) -> DocstringParam:
         clean_term = term_text.strip()
         optional = False
         type_name = None
@@ -180,7 +182,7 @@ class SemanticExtractorVisitor(NodeVisitor):
                 optional = True
                 type_parts = [p for p in type_parts if p.lower() != "optional"]
             if type_parts:
-                type_name = type_parts[0]
+                type_name = " | ".join(type_parts)
         else:
             name = clean_term.strip("`").strip()
 
@@ -198,8 +200,7 @@ class SemanticExtractorVisitor(NodeVisitor):
                 optional = True
                 type_parts = [p for p in type_parts if p.lower() != "optional"]
             if not type_name and type_parts:
-                type_name = type_parts[0]
-
+                type_name = " | ".join(type_parts)
 
         default_match = re.search(
             r"(?:defaults?(?:\s+(?:to|is)|\s*[:=]))\s*(?:[`'\"]([^`'\"]+)[`'\"]|([^\s,;)]+))",
@@ -217,54 +218,117 @@ class SemanticExtractorVisitor(NodeVisitor):
             description=desc,
             default=default_val,
             optional=optional or (default_val is not None),
+            raw_entry=raw_entry,
         )
-
 
     def _parse_return_term(
-        self, term_text: str, desc_text: str
+        self, term_text: str, desc_text: str, raw_entry: Any = None
     ) -> DocstringReturn:
-        clean_term = term_text.strip().strip("`").strip()
+        clean_term = term_text.strip()
+        match = re.match(r"^(.*?)\s*\(([^)]+)\)\s*$", clean_term)
+        if match:
+            name_part, type_part = match.groups()
+            return DocstringReturn(
+                name=name_part.strip().strip("`").strip() or None,
+                type_name=type_part.strip().strip("`").strip() or None,
+                description=desc_text.strip(),
+                raw_entry=raw_entry,
+            )
+
+        clean = clean_term.strip("`").strip()
+        # Check if desc starts with (type)
+        desc = desc_text.strip()
+        type_match = re.match(r"^\s*\(([^)]+)\)\s*(?:[-:]\s*)?(.*)$", desc, re.DOTALL)
+        if type_match:
+            raw_type, rem = type_match.groups()
+            return DocstringReturn(
+                name=clean if clean else None,
+                type_name=raw_type.strip().strip("`").strip() or None,
+                description=rem.strip(),
+                raw_entry=raw_entry,
+            )
+
         return DocstringReturn(
-            type_name=clean_term if clean_term else None,
-            description=desc_text.strip(),
+            name=None,
+            type_name=clean if clean else None,
+            description=desc,
+            raw_entry=raw_entry,
         )
 
-    def _parse_raise_term(self, term_text: str, desc_text: str) -> DocstringRaise:
+    def _parse_raise_term(
+        self, term_text: str, desc_text: str, raw_entry: Any = None
+    ) -> DocstringRaise:
         clean_term = term_text.strip().strip("`").strip()
         return DocstringRaise(
             type_name=clean_term,
             description=desc_text.strip(),
+            raw_entry=raw_entry,
         )
 
-    def _parse_yield_term(self, term_text: str, desc_text: str) -> DocstringYield:
-        clean_term = term_text.strip().strip("`").strip()
+    def _parse_yield_term(
+        self, term_text: str, desc_text: str, raw_entry: Any = None
+    ) -> DocstringYield:
+        clean_term = term_text.strip()
+        match = re.match(r"^(.*?)\s*\(([^)]+)\)\s*$", clean_term)
+        if match:
+            name_part, type_part = match.groups()
+            return DocstringYield(
+                name=name_part.strip().strip("`").strip() or None,
+                type_name=type_part.strip().strip("`").strip() or None,
+                description=desc_text.strip(),
+                raw_entry=raw_entry,
+            )
+
+        clean = clean_term.strip("`").strip()
+        # Check if desc starts with (type)
+        desc = desc_text.strip()
+        type_match = re.match(r"^\s*\(([^)]+)\)\s*(?:[-:]\s*)?(.*)$", desc, re.DOTALL)
+        if type_match:
+            raw_type, rem = type_match.groups()
+            return DocstringYield(
+                name=clean if clean else None,
+                type_name=raw_type.strip().strip("`").strip() or None,
+                description=rem.strip(),
+                raw_entry=raw_entry,
+            )
+
         return DocstringYield(
-            type_name=clean_term if clean_term else None,
-            description=desc_text.strip(),
+            name=None,
+            type_name=clean if clean else None,
+            description=desc,
+            raw_entry=raw_entry,
         )
 
-    def _parse_receive_term(self, term_text: str, desc_text: str) -> DocstringReceive:
+    def _parse_receive_term(
+        self, term_text: str, desc_text: str, raw_entry: Any = None
+    ) -> DocstringReceive:
         clean_term = term_text.strip().strip("`").strip()
         return DocstringReceive(
             type_name=clean_term if clean_term else None,
             description=desc_text.strip(),
         )
 
-    def _parse_warn_term(self, term_text: str, desc_text: str) -> DocstringWarn:
+    def _parse_warn_term(
+        self, term_text: str, desc_text: str, raw_entry: Any = None
+    ) -> DocstringWarn:
         clean_term = term_text.strip().strip("`").strip()
         return DocstringWarn(
             type_name=clean_term if clean_term else None,
             description=desc_text.strip(),
         )
 
-    def _parse_attr_term(self, term_text: str, desc_text: str) -> DocstringAttribute:
-        param = self._parse_param_term(term_text, desc_text)
+    def _parse_attr_term(
+        self, term_text: str, desc_text: str, raw_entry: Any = None
+    ) -> DocstringAttribute:
+        param = self._parse_param_term(term_text, desc_text, raw_entry=raw_entry)
         return DocstringAttribute(
             name=param.name,
             type_name=param.type_name,
             description=param.description,
             value=param.default,
+            raw_entry=raw_entry,
         )
+
 
     def _parse_deprecated_block(self, text: str) -> DocstringDeprecated:
         version = None
@@ -297,19 +361,33 @@ class SemanticExtractorVisitor(NodeVisitor):
                     self._get_node_text(b) for b in getattr(item, "blocks", [])
                 )
                 if role == "parameters":
-                    self.parameters.append(self._parse_param_term(term_text, desc_text))
+                    self.parameters.append(
+                        self._parse_param_term(term_text, desc_text, raw_entry=item)
+                    )
                 elif role == "returns":
-                    self.returns.append(self._parse_return_term(term_text, desc_text))
+                    self.returns.append(
+                        self._parse_return_term(term_text, desc_text, raw_entry=item)
+                    )
                 elif role == "yields":
-                    self.yields.append(self._parse_yield_term(term_text, desc_text))
+                    self.yields.append(
+                        self._parse_yield_term(term_text, desc_text, raw_entry=item)
+                    )
                 elif role == "raises":
-                    self.raises.append(self._parse_raise_term(term_text, desc_text))
+                    self.raises.append(
+                        self._parse_raise_term(term_text, desc_text, raw_entry=item)
+                    )
                 elif role == "receives":
-                    self.receives.append(self._parse_receive_term(term_text, desc_text))
+                    self.receives.append(
+                        self._parse_receive_term(term_text, desc_text, raw_entry=item)
+                    )
                 elif role == "warns":
-                    self.warns.append(self._parse_warn_term(term_text, desc_text))
+                    self.warns.append(
+                        self._parse_warn_term(term_text, desc_text, raw_entry=item)
+                    )
                 elif role == "attributes":
-                    self.attributes.append(self._parse_attr_term(term_text, desc_text))
+                    self.attributes.append(
+                        self._parse_attr_term(term_text, desc_text, raw_entry=item)
+                    )
         else:
             self.generic_visit(node)
 

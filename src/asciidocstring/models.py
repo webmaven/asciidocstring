@@ -46,6 +46,7 @@ class DocstringReturn:
     type_name: str | None = None
     description: str = ""
     name: str | None = None
+    raw_entry: Any | None = None
 
 
 @dataclass
@@ -64,6 +65,7 @@ class DocstringYield:
     type_name: str | None = None
     description: str = ""
     name: str | None = None
+    raw_entry: Any | None = None
 
 
 @dataclass
@@ -78,6 +80,7 @@ class DocstringRaise:
 
     type_name: str
     description: str = ""
+    raw_entry: Any | None = None
 
 
 @dataclass
@@ -128,6 +131,7 @@ class DocstringAttribute:
     type_name: str | None = None
     description: str = ""
     value: str | None = None
+    raw_entry: Any | None = None
 
 
 @dataclass
