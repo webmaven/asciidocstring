@@ -81,10 +81,11 @@ def test_docstring_return_docstring() -> None:
     assert "`type_name` (str, optional)::" in doc
     assert "`description` (str)::" in doc
     assert "`name` (str, optional)::" in doc
+    assert "`raw_entry` (Any, optional)::" in doc
 
     parsed = asciidocstring.parse(doc)
     attr_names = [a.name for a in parsed.attributes]
-    assert attr_names == ["type_name", "description", "name"]
+    assert attr_names == ["type_name", "description", "name", "raw_entry"]
 
 
 def test_docstring_yield_docstring() -> None:
@@ -94,10 +95,11 @@ def test_docstring_yield_docstring() -> None:
     assert "`type_name` (str, optional)::" in doc
     assert "`description` (str)::" in doc
     assert "`name` (str, optional)::" in doc
+    assert "`raw_entry` (Any, optional)::" in doc
 
     parsed = asciidocstring.parse(doc)
     attr_names = [a.name for a in parsed.attributes]
-    assert attr_names == ["type_name", "description", "name"]
+    assert attr_names == ["type_name", "description", "name", "raw_entry"]
 
 
 def test_docstring_raise_docstring() -> None:
@@ -106,10 +108,11 @@ def test_docstring_raise_docstring() -> None:
     assert "[attributes]" in doc
     assert "`type_name` (str)::" in doc
     assert "`description` (str)::" in doc
+    assert "`raw_entry` (Any, optional)::" in doc
 
     parsed = asciidocstring.parse(doc)
     attr_names = [a.name for a in parsed.attributes]
-    assert attr_names == ["type_name", "description"]
+    assert attr_names == ["type_name", "description", "raw_entry"]
 
 
 def test_docstring_receive_docstring() -> None:
@@ -144,10 +147,11 @@ def test_docstring_attribute_docstring() -> None:
     assert "`type_name` (str, optional)::" in doc
     assert "`description` (str)::" in doc
     assert "`value` (str, optional)::" in doc
+    assert "`raw_entry` (Any, optional)::" in doc
 
     parsed = asciidocstring.parse(doc)
     attr_names = [a.name for a in parsed.attributes]
-    assert attr_names == ["name", "type_name", "description", "value"]
+    assert attr_names == ["name", "type_name", "description", "value", "raw_entry"]
 
 
 def test_docstring_deprecated_docstring() -> None:
