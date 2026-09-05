@@ -27,6 +27,28 @@ from .models import (
 )
 
 
+def _split_types(type_str: str) -> list[str]:
+    """Split type_str on commas at bracket-depth 0 only."""
+    parts: list[str] = []
+    depth = 0
+    current: list[str] = []
+    for ch in type_str:
+        if ch in "([{":
+            depth += 1
+            current.append(ch)
+        elif ch in ")]}":
+            depth -= 1
+            current.append(ch)
+        elif ch == "," and depth == 0:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+    if current or parts:
+        parts.append("".join(current))
+    return [p.strip() for p in parts if p.strip()]
+
+
 class SemanticExtractorVisitor(NodeVisitor):
     """AST visitor to inspect and extract structured semantic components.
 
@@ -175,9 +197,7 @@ class SemanticExtractorVisitor(NodeVisitor):
         if term_match:
             raw_name, raw_type = term_match.groups()
             name = raw_name.strip().strip("`").strip()
-            type_parts = [
-                p.strip().strip("`") for p in raw_type.split(",") if p.strip()
-            ]
+            type_parts = [p.strip("`") for p in _split_types(raw_type)]
             if "optional" in [p.lower() for p in type_parts]:
                 optional = True
                 type_parts = [p for p in type_parts if p.lower() != "optional"]
@@ -193,9 +213,7 @@ class SemanticExtractorVisitor(NodeVisitor):
         if type_match:
             raw_type, remaining_desc = type_match.groups()
             desc = remaining_desc.strip()
-            type_parts = [
-                p.strip().strip("`") for p in raw_type.split(",") if p.strip()
-            ]
+            type_parts = [p.strip("`") for p in _split_types(raw_type)]
             if "optional" in [p.lower() for p in type_parts]:
                 optional = True
                 type_parts = [p for p in type_parts if p.lower() != "optional"]

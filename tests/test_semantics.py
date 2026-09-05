@@ -1,5 +1,6 @@
 import asciidocstring
 from asciidocstring import parse
+from asciidocstring.semantics import _split_types
 
 
 def test_parse_semantic_sections_attributes() -> None:
@@ -542,5 +543,49 @@ def test_raises_and_attributes_raw_entry_preservation() -> None:
     assert len(doc.attributes) == 1
     assert doc.attributes[0].name == "attr"
     assert doc.attributes[0].raw_entry is not None
+
+
+def test_generic_type_parameter_comma_handling() -> None:
+    """Bracket-aware comma split must not corrupt generic type arguments."""
+    doc = parse("""
+        A function.
+
+        [parameters]
+        `mapping` (dict[str, int], optional):: A mapping.
+        `value` (Union[int, list[str]], float):: A value.
+        `rhs_generic`:: (dict[str, list[int]], optional) A mapping in description.
+    """)
+    assert len(doc.parameters) == 3
+
+    assert doc.parameters[0].name == "mapping"
+    assert doc.parameters[0].type_name == "dict[str, int]"
+    assert doc.parameters[0].optional is True
+
+    assert doc.parameters[1].name == "value"
+    assert doc.parameters[1].type_name == "Union[int, list[str]] | float"
+    assert doc.parameters[1].optional is False
+
+    assert doc.parameters[2].name == "rhs_generic"
+    assert doc.parameters[2].type_name == "dict[str, list[int]]"
+    assert doc.parameters[2].optional is True
+
+
+def test_split_types_helper() -> None:
+    """_split_types respects brackets, braces, parens and whitespace."""
+    assert _split_types("") == []
+    assert _split_types("   ") == []
+    assert _split_types(" , ") == []
+    assert _split_types("int") == ["int"]
+    assert _split_types("int, str") == ["int", "str"]
+    assert _split_types("dict[str, int], list[tuple[int, str]]") == [
+        "dict[str, int]",
+        "list[tuple[int, str]]",
+    ]
+    assert _split_types("Callable((int, int), str), dict{str, int}") == [
+        "Callable((int, int), str)",
+        "dict{str, int}",
+    ]
+
+
 
 
