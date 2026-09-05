@@ -17,6 +17,8 @@ This document details all notable changes and releases for `asciidocstring`.
 * Bumped minimum `asciidoctrine` dependency constraint to `>=0.2.0a7` in `pyproject.toml`.
 
 === Fixed
+* **Bracket-Aware Type Parameter Splitting**: Fixed naive comma splitting for parenthesized parameter types, ensuring generic and nested types like `dict[str, int]` or `Union[int, list[str]]` are not fragmented into spurious union members.
+* **Sphinx List-Table Multiline Cell Indentation**: Fixed cell line indentation in `visit_table` to guarantee continuation lines of multiline table cells conform to Sphinx and Docutils `.. list-table::` specifications without triggering warnings.
 * **Hanging-Indented List Item Continuations in Docstrings**: Documented and verified upstream resolution in `asciidoctrine>=0.2.0a7` for multiline list items in docstrings and Griffe docstring conversions, resolving Issue https://github.com/webmaven/asciidocstring/issues/5[#5].
 
 ---

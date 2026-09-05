@@ -171,6 +171,18 @@ Place the type annotation in parentheses at the start of the description definit
 `retry_count`:: (`int`) Maximum number of retries. default is 3.
 ----
 
+==== Composite & Generic Types
+
+Multiple types in parentheses are parsed as union types joined by `|`. Bracket-aware parsing guarantees that generic arguments containing commas are preserved:
+
+[source,asciidoc]
+----
+[parameters]
+`mapping` (dict[str, int], optional):: Configuration mapping.
+`payload` (int, str):: Either integer or string identifier (extracted as `int | str`).
+`cache` (Union[dict[str, Any], list[str]], optional):: Cache container.
+----
+
 ==== Specifying Defaults
 
 Default values are automatically extracted and populated into the semantic AST model (`param.default`). When a default value is specified, `optional` is automatically inferred as `True`.
@@ -209,7 +221,18 @@ Document the return value of a function or method using a description list under
 `dict[str, Any]`:: A JSON-serializable dictionary containing the processed record.
 ----
 
-For composite or named return values (e.g. tuples or specialized dataclasses):
+Return values may also be named, supporting both LHS and RHS type annotation formats:
+
+[source,asciidoc]
+----
+[returns]
+`status` (bool):: Whether the operation succeeded.
+`payload`:: (`bytes`) The raw response payload.
+----
+
+When parsed into `DocstringReturn`, both `return_obj.name` (`"status"`) and `return_obj.type_name` (`"bool"`) are preserved. In addition, the source AST node is retained in `return_obj.raw_entry`.
+
+For composite or anonymous return values (e.g. tuples or specialized dataclasses):
 
 [source,asciidoc]
 ----
@@ -229,6 +252,16 @@ For Python generators and coroutines, document values produced by `yield` expres
 [receives]
 `int`:: New buffer capacity dynamically passed via `.send()`.
 ----
+
+Like returns, yields can also feature named identifiers:
+
+[source,asciidoc]
+----
+[yields]
+`chunk` (bytes):: Stream chunk data buffer.
+----
+
+When parsed into `DocstringYield`, both `yield_obj.name` (`"chunk"`) and `yield_obj.type_name` (`"bytes"`) are preserved, alongside `yield_obj.raw_entry`.
 
 === Exceptions & Raises (`[raises]`)
 
