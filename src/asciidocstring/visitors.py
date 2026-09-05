@@ -267,7 +267,7 @@ class ReSTSerializerVisitor(NodeVisitor):
         self._current_list_depth = old_depth
 
     def visit_listitem(self, node: Any) -> None:
-        """Render standard bullet item formatting."""
+        """Render list item formatting, preserving ordered vs unordered marker."""
         indent_size = (self._current_list_depth - 1) * 2
         indent = " " * indent_size
 
@@ -275,7 +275,11 @@ class ReSTSerializerVisitor(NodeVisitor):
         if hasattr(node, "principal") and node.principal:
             content = "".join(self.render_inline(inline) for inline in node.principal)
 
-        self.output.append(f"{indent}* {content}\n")
+        marker = getattr(node, "marker", "*") or "*"
+        is_ordered = marker.startswith(".") or (marker and marker[0].isdigit())
+        bullet = "#." if is_ordered else "*"
+
+        self.output.append(f"{indent}{bullet} {content}\n")
 
         # Render nested block children under this item
         old_indent = self._indent_level
@@ -336,3 +340,35 @@ class ReSTSerializerVisitor(NodeVisitor):
         """Render thematic breaks (horizontal lines)."""
         indent = " " * self._indent_level
         self.output.append(f"{indent}----\n\n")
+
+    def visit_table(self, node: Any) -> None:
+        """Render table blocks using Sphinx list-table directives."""
+        indent = " " * self._indent_level
+        title = ""
+        if hasattr(node, "title") and node.title:
+            title_text = "".join(
+                self.render_inline(inl)
+                for inl in getattr(node.title, "inlines", [])
+            )
+            title = f" {title_text}"
+
+        self.output.append(f"{indent}.. list-table::{title}\n\n")
+
+        rows = getattr(node, "rows", [])
+        body_indent = " " * (self._indent_level + 3)
+
+        for _row_idx, row in enumerate(rows):
+            cells = getattr(row, "cells", [])
+            for col_idx, cell in enumerate(cells):
+                cell_blocks = getattr(cell, "blocks", [])
+                cell_parts = []
+                for b in cell_blocks:
+                    inlines = getattr(b, "inlines", [])
+                    cell_parts.append(
+                        "".join(self.render_inline(inl) for inl in inlines).strip()
+                    )
+                cell_text = " ".join(cell_parts).strip()
+                prefix = "* - " if col_idx == 0 else "  - "
+                self.output.append(f"{body_indent}{prefix}{cell_text}\n")
+        self.output.append("\n")
+
