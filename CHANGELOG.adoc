@@ -6,6 +6,11 @@ This document details all notable changes and releases for `asciidocstring`.
 == [Unreleased]
 
 === Added
+* **Lossless Docstring Parsing and Semantic Extraction**: Upgraded `SemanticExtractorVisitor` to support composite and union types (e.g. `(int, str, optional)` -> `type_name="int | str"`, `optional=True`) across parameter sections. Added `raw_entry` tracking linking back to source AST nodes across `DocstringReturn`, `DocstringYield`, `DocstringRaise`, and `DocstringAttribute`.
+* **Named Return and Yield Identification**: Extended semantic models and parsing to preserve distinct `.name` and `.type_name` on `DocstringReturn` and `DocstringYield`.
+* **Lossless Griffe Bridge Identifier Preservation**: Upgraded `to_asciidoc` in `griffe_bridge.py` to preserve both element name and type annotation when converting Griffe docstring sections.
+* **Sphinx reST Table Serialization**: Added `visit_table` to `ReSTSerializerVisitor` supporting compilation of AsciiDoc tables to standard Sphinx `.. list-table::` directives.
+* **Ordered List Preservation**: Upgraded `ReSTSerializerVisitor` to preserve numbered and ordered list markers (`#. `) instead of serializing all items as unordered asterisks.
 * **AsciiDoctrine 0.2.0a7 Compatibility Tests**: Added test suite (`test_asciidoctrine_020a7_compat.py`) validating upstream resolutions for hanging-indented list item continuation lines and backslash-escaped inline formatting delimiters.
 
 === Upgraded
