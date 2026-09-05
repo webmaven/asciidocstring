@@ -4,7 +4,16 @@
 This document details all notable changes and releases for `asciidocstring`.
 
 == [Unreleased]
- 
+
+=== Added
+* **AsciiDoctrine 0.2.0a7 Compatibility Tests**: Added test suite (`test_asciidoctrine_020a7_compat.py`) validating upstream resolutions for hanging-indented list item continuation lines and backslash-escaped inline formatting delimiters.
+
+=== Upgraded
+* Bumped minimum `asciidoctrine` dependency constraint to `>=0.2.0a7` in `pyproject.toml`.
+
+=== Fixed
+* **Hanging-Indented List Item Continuations in Docstrings**: Documented and verified upstream resolution in `asciidoctrine>=0.2.0a7` for multiline list items in docstrings and Griffe docstring conversions, resolving Issue https://github.com/webmaven/asciidocstring/issues/5[#5].
+
 ---
  
 == [0.1.0a8] - 2026-08-30

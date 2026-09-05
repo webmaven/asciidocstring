@@ -73,6 +73,11 @@ mypy src/
 * **Inline Monospace Backtick Boundary (Issue [#117](https://github.com/webmaven/asciidoctrine/issues/117)):** Resolved in `asciidoctrine>=0.2.0a4`. Multiple inline code spans (`` `hook_0`, `hook_1`, `hook_2`, `hook_3` ``) on a single line no longer invert span grouping.
 * **Block Title Attachment Preceded by Another Block (Issue [#119](https://github.com/webmaven/asciidoctrine/issues/119)):** Resolved in `asciidoctrine>=0.2.0a5`. Block title lines (`.Title`) preceded by another block are now correctly attached to subsequent blocks (listings, admonitions, tables) rather than being parsed as standalone paragraphs.
 * **Inline Macros Attached to Preceding Words/Punctuation (Issue [#120](https://github.com/webmaven/asciidoctrine/issues/120)):** Resolved in `asciidoctrine>=0.2.0a5`. Inline macros (`footnote:[...]`, `kbd:[...]`, `pass:[...]`, URI schemes) attached directly to preceding text without whitespace (e.g. `statement.footnote:[Note text]`) now parse correctly.
+* **Human-Readable Diagnostics & Graceful XRef Resolution (Feature [#78](https://github.com/webmaven/asciidoctrine/issues/78)):** Resolved in `asciidoctrine>=0.2.0a6`. Lark tokens in syntax errors are translated to human-readable names; unresolved cross-references accumulate warnings instead of raising unhandled `KeyError`.
+* **Block Title Whitespace Ambiguity with Dot Lists (Issue [#122](https://github.com/webmaven/asciidoctrine/issues/122)):** Resolved in `asciidoctrine>=0.2.0a6`. Enforces non-whitespace immediately following the dot in block titles (`.Title`), preventing `. item` ordered list lines from being consumed as block titles.
+* **Inline Formatting Backslash Escaping (Feature [#113](https://github.com/webmaven/asciidoctrine/issues/113)):** Resolved in `asciidoctrine>=0.2.0a7`. Backslash-escaped inline formatting delimiters (`\*bold*`, `\_italic_`, `\`code\``, `\\__func__`) suppress span creation and emit delimiter characters as plain text.
+* **Hanging-Indented List Item Continuation Lines (Issue [#125](https://github.com/webmaven/asciidoctrine/issues/125)):** Resolved in `asciidoctrine>=0.2.0a7`. Contiguous indented lines following list items without blank lines are folded into the list item's principal text, preventing spurious indented literal blocks and keeping lists intact.
+
 
 
 ---
