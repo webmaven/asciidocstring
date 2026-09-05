@@ -1,4 +1,6 @@
 import asciidocstring
+from asciidocstring import parse
+from asciidocstring.semantics import _split_types
 
 
 def test_parse_semantic_sections_attributes() -> None:
@@ -439,5 +441,151 @@ def test_attribute_term_and_value_parsing() -> None:
     assert attrs["DEBUG"].name == "DEBUG"
     assert attrs["DEBUG"].type_name == "bool"
     assert attrs["DEBUG"].value == "False"
+
+
+def test_multi_type_parameter_preservation() -> None:
+    doc = parse("""
+        A sample function.
+
+        [parameters]
+        `val` (int, str, optional):: Input value.
+        `config` (dict, list):: Configuration container.
+    """)
+    assert len(doc.parameters) == 2
+    assert doc.parameters[0].name == "val"
+    assert doc.parameters[0].type_name == "int | str"
+    assert doc.parameters[0].optional is True
+    assert doc.parameters[0].raw_entry is not None
+
+    assert doc.parameters[1].name == "config"
+    assert doc.parameters[1].type_name == "dict | list"
+    assert doc.parameters[1].optional is False
+
+
+def test_named_returns_and_yields_preservation() -> None:
+    doc = parse("""
+        A generator function.
+
+        [returns]
+        `status` (bool):: Whether operation succeeded.
+        `int`:: Anonymous integer return.
+
+        [yields]
+        `chunk` (bytes):: Stream chunk data.
+        `str`:: Anonymous string yield.
+    """)
+    assert len(doc.returns) == 2
+    assert doc.returns[0].name == "status"
+    assert doc.returns[0].type_name == "bool"
+    assert doc.returns[0].description == "Whether operation succeeded."
+    assert doc.returns[0].raw_entry is not None
+
+    assert doc.returns[1].name is None
+    assert doc.returns[1].type_name == "int"
+    assert doc.returns[1].description == "Anonymous integer return."
+
+    assert len(doc.yields) == 2
+    assert doc.yields[0].name == "chunk"
+    assert doc.yields[0].type_name == "bytes"
+    assert doc.yields[0].description == "Stream chunk data."
+    assert doc.yields[0].raw_entry is not None
+
+    assert doc.yields[1].name is None
+    assert doc.yields[1].type_name == "str"
+
+
+def test_rhs_named_returns_yields_and_multi_type_parameters() -> None:
+    doc = parse("""
+        A generator function with RHS types.
+
+        [parameters]
+        `val`:: (int, str, optional) Input value.
+
+        [returns]
+        `status`:: (bool) Whether operation succeeded.
+
+        [yields]
+        `chunk`:: (bytes) Stream chunk data.
+    """)
+    assert len(doc.parameters) == 1
+    assert doc.parameters[0].name == "val"
+    assert doc.parameters[0].type_name == "int | str"
+    assert doc.parameters[0].optional is True
+    assert doc.parameters[0].raw_entry is not None
+
+    assert len(doc.returns) == 1
+    assert doc.returns[0].name == "status"
+    assert doc.returns[0].type_name == "bool"
+    assert doc.returns[0].description == "Whether operation succeeded."
+    assert doc.returns[0].raw_entry is not None
+
+    assert len(doc.yields) == 1
+    assert doc.yields[0].name == "chunk"
+    assert doc.yields[0].type_name == "bytes"
+    assert doc.yields[0].description == "Stream chunk data."
+    assert doc.yields[0].raw_entry is not None
+
+
+def test_raises_and_attributes_raw_entry_preservation() -> None:
+    doc = parse("""
+        A function with raises and attributes.
+
+        [raises]
+        `ValueError`:: If something goes wrong.
+
+        [attributes]
+        `attr` (str):: An attribute.
+    """)
+    assert len(doc.raises) == 1
+    assert doc.raises[0].type_name == "ValueError"
+    assert doc.raises[0].raw_entry is not None
+
+    assert len(doc.attributes) == 1
+    assert doc.attributes[0].name == "attr"
+    assert doc.attributes[0].raw_entry is not None
+
+
+def test_generic_type_parameter_comma_handling() -> None:
+    """Bracket-aware comma split must not corrupt generic type arguments."""
+    doc = parse("""
+        A function.
+
+        [parameters]
+        `mapping` (dict[str, int], optional):: A mapping.
+        `value` (Union[int, list[str]], float):: A value.
+        `rhs_generic`:: (dict[str, list[int]], optional) A mapping in description.
+    """)
+    assert len(doc.parameters) == 3
+
+    assert doc.parameters[0].name == "mapping"
+    assert doc.parameters[0].type_name == "dict[str, int]"
+    assert doc.parameters[0].optional is True
+
+    assert doc.parameters[1].name == "value"
+    assert doc.parameters[1].type_name == "Union[int, list[str]] | float"
+    assert doc.parameters[1].optional is False
+
+    assert doc.parameters[2].name == "rhs_generic"
+    assert doc.parameters[2].type_name == "dict[str, list[int]]"
+    assert doc.parameters[2].optional is True
+
+
+def test_split_types_helper() -> None:
+    """_split_types respects brackets, braces, parens and whitespace."""
+    assert _split_types("") == []
+    assert _split_types("   ") == []
+    assert _split_types(" , ") == []
+    assert _split_types("int") == ["int"]
+    assert _split_types("int, str") == ["int", "str"]
+    assert _split_types("dict[str, int], list[tuple[int, str]]") == [
+        "dict[str, int]",
+        "list[tuple[int, str]]",
+    ]
+    assert _split_types("Callable((int, int), str), dict{str, int}") == [
+        "Callable((int, int), str)",
+        "dict{str, int}",
+    ]
+
+
 
 

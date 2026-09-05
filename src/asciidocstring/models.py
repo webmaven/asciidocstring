@@ -41,11 +41,14 @@ class DocstringReturn:
         Text description of the return value. Defaults to `""`.
     `name` (str, optional)::
         Optional identifier or label for the return value. Defaults to `None`.
+    `raw_entry` (Any, optional)::
+        Optional raw parsed AST node or term reference. Defaults to `None`.
     """
 
     type_name: str | None = None
     description: str = ""
     name: str | None = None
+    raw_entry: Any | None = None
 
 
 @dataclass
@@ -59,11 +62,14 @@ class DocstringYield:
         Text description of the yield value. Defaults to `""`.
     `name` (str, optional)::
         Optional identifier or label for the yield value. Defaults to `None`.
+    `raw_entry` (Any, optional)::
+        Optional raw parsed AST node or term reference. Defaults to `None`.
     """
 
     type_name: str | None = None
     description: str = ""
     name: str | None = None
+    raw_entry: Any | None = None
 
 
 @dataclass
@@ -74,10 +80,13 @@ class DocstringRaise:
     `type_name` (str):: Exception class or type name.
     `description` (str)::
         Circumstances under which the exception is raised. Defaults to `""`.
+    `raw_entry` (Any, optional)::
+        Optional raw parsed AST node or term reference. Defaults to `None`.
     """
 
     type_name: str
     description: str = ""
+    raw_entry: Any | None = None
 
 
 @dataclass
@@ -122,12 +131,15 @@ class DocstringAttribute:
         Text description of the attribute. Defaults to `""`.
     `value` (str, optional)::
         Optional initial or default value. Defaults to `None`.
+    `raw_entry` (Any, optional)::
+        Optional raw parsed AST node or term reference. Defaults to `None`.
     """
 
     name: str
     type_name: str | None = None
     description: str = ""
     value: str | None = None
+    raw_entry: Any | None = None
 
 
 @dataclass
