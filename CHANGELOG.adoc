@@ -3,7 +3,7 @@
 
 This document details all notable changes and releases for `asciidocstring`.
 
-== [Unreleased]
+== [0.1.0a9] - 2026-09-04
 
 === Added
 * **Lossless Docstring Parsing and Semantic Extraction**: Upgraded `SemanticExtractorVisitor` to support composite and union types (e.g. `(int, str, optional)` -> `type_name="int | str"`, `optional=True`) across parameter sections. Added `raw_entry` tracking linking back to source AST nodes across `DocstringReturn`, `DocstringYield`, `DocstringRaise`, and `DocstringAttribute`.
