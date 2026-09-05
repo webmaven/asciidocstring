@@ -168,6 +168,22 @@ def test_to_asciidoc_empty_sections() -> None:
     ]
     adoc = to_asciidoc(sections)
     assert adoc == ""
+def test_griffe_named_returns_and_yields() -> None:
+    docstring = """
+    Returns:
+        total (int): The total computed sum.
 
+    Yields:
+        chunk (bytes): The next data chunk.
+    """
+    doc = from_griffe(docstring, style="google")
+    assert len(doc.returns) == 1
+    assert doc.returns[0].name == "total"
+    assert doc.returns[0].type_name == "int"
+    assert doc.returns[0].description == "The total computed sum."
 
+    assert len(doc.yields) == 1
+    assert doc.yields[0].name == "chunk"
+    assert doc.yields[0].type_name == "bytes"
+    assert doc.yields[0].description == "The next data chunk."
 

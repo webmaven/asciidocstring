@@ -91,8 +91,11 @@ def to_asciidoc(sections: Sequence[Union["griffe.DocstringSection", Any]]) -> st
                 name = getattr(obj, "name", "")
                 annotation = getattr(obj, "annotation", None)
                 desc = getattr(obj, "description", "")
-                type_name = str(annotation) if annotation else name or "object"
-                lines.append(f"`{type_name}`:: {desc}")
+                if name and annotation:
+                    lines.append(f"`{name}` ({annotation}):: {desc}")
+                else:
+                    type_name = str(annotation) if annotation else name or "object"
+                    lines.append(f"`{type_name}`:: {desc}")
             blocks.append("\n".join(lines))
 
         elif kind_value == "examples":
