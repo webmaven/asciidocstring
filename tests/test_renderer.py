@@ -111,6 +111,61 @@ def test_table_serialization() -> None:
     assert "  - Val 2" in rest
 
 
+def test_table_serialization_no_title() -> None:
+    docstring = """
+        |===
+        | Col A | Col B
+        | Foo   | Bar
+        |===
+        """
+    doc = asciidocstring.parse(docstring)
+    rest = doc.to_rest()
+    assert ".. list-table::\n" in rest  # no title suffix
+    assert "* - Col A" in rest
+    assert "  - Col B" in rest
+    assert "* - Foo" in rest
+    assert "  - Bar" in rest
+
+
+def test_table_serialization_docutils_valid() -> None:
+    """Verify the emitted list-table compiles cleanly through Docutils."""
+    import docutils.core
+
+    docstring = """
+        .Sample Table
+        |===
+        | Header 1 | Header 2
+        | Val 1    | Val 2
+        |===
+        """
+    doc = asciidocstring.parse(docstring)
+    rest = doc.to_rest()
+    settings = {"warning_stream": None, "halt_level": 2}
+    docutils.core.publish_parts(rest, writer_name="html", settings_overrides=settings)
+
+
+def test_table_serialization_multiline_cells() -> None:
+    """Verify multiline table cells are properly indented and compile in Docutils."""
+    import docutils.core
+
+    docstring = """
+        |===
+        | Header 1 | Header 2
+        | Line 1 +
+        Line 2 | Val 2
+        | | Val 4
+        |===
+        """
+    doc = asciidocstring.parse(docstring)
+    rest = doc.to_rest()
+    assert "* - Line 1\n       Line 2" in rest
+    assert "  - Val 2" in rest
+    assert "* - \n" in rest
+    assert "  - Val 4" in rest
+    settings = {"warning_stream": None, "halt_level": 2}
+    docutils.core.publish_parts(rest, writer_name="html", settings_overrides=settings)
+
+
 def test_description_lists_serialization() -> None:
     docstring = """
         param1 (int):: The first parameter

@@ -356,6 +356,7 @@ class ReSTSerializerVisitor(NodeVisitor):
 
         rows = getattr(node, "rows", [])
         body_indent = " " * (self._indent_level + 3)
+        continuation_indent = body_indent + "    "
 
         for _row_idx, row in enumerate(rows):
             cells = getattr(row, "cells", [])
@@ -369,6 +370,12 @@ class ReSTSerializerVisitor(NodeVisitor):
                     )
                 cell_text = " ".join(cell_parts).strip()
                 prefix = "* - " if col_idx == 0 else "  - "
-                self.output.append(f"{body_indent}{prefix}{cell_text}\n")
+                lines = cell_text.splitlines()
+                if lines:
+                    self.output.append(f"{body_indent}{prefix}{lines[0]}\n")
+                    for extra_line in lines[1:]:
+                        self.output.append(f"{continuation_indent}{extra_line}\n")
+                else:
+                    self.output.append(f"{body_indent}{prefix}\n")
         self.output.append("\n")
 
