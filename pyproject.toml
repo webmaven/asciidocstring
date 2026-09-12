@@ -70,7 +70,7 @@ target-version = "py313"  # Ruff supports target version up to current stable
 src = ["src"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "I", "UP", "B"]
 ignore = []
 
 [tool.mypy]

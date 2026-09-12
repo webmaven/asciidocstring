@@ -2,7 +2,7 @@
 
 import inspect
 import warnings
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, Any
 
 from asciidoctrine import AsciiDocSyntaxError
 from asciidoctrine.lark_parser import parse_to_ast
@@ -195,7 +195,7 @@ class AsciiDocStringDocument:
 
     def extract_tests(
         self, language: str = "python", requires_test_marker: bool = False
-    ) -> List[TestBlock]:
+    ) -> list[TestBlock]:
         """Extract executable code blocks from the parsed AST.
 
         [parameters]

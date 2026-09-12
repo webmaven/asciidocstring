@@ -1,6 +1,7 @@
 """Bridge for ingesting and converting Griffe docstring sections."""
 
-from typing import TYPE_CHECKING, Any, Literal, Sequence, Union
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any, Literal, Union
 
 from .document import AsciiDocStringDocument, parse
 
