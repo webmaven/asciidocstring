@@ -99,6 +99,10 @@ def test_safe_mode_semantic_fallback_properties() -> None:
     assert doc.attributes == []
     assert doc.examples == []
     assert doc.deprecated is None
+    assert doc.version_added is None
+    assert doc.version_changed == []
+    assert doc.deprecated_role is None
+    assert doc.is_experimental is False
     # to_rest() and ast should still produce the warning admonition
     assert doc.ast is not None
     assert ".. warning::" in doc.to_rest()

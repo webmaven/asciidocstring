@@ -1,6 +1,6 @@
 """AST visitors for reStructuredText serialization and doctest extraction."""
 
-from typing import Any, List
+from typing import Any
 
 from asciidoctrine.nodes import Listing, NodeVisitor
 
@@ -37,9 +37,9 @@ class TestBlockExtractorVisitor(NodeVisitor):
         """
         self.target_language = target_language.lower()
         self.requires_test_marker = requires_test_marker
-        self.extracted_tests: List[TestBlock] = []
+        self.extracted_tests: list[TestBlock] = []
 
-    def extract(self, node: Any) -> List[TestBlock]:
+    def extract(self, node: Any) -> list[TestBlock]:
         """Reset state, traverse the node tree, and return extracted test blocks.
 
         [parameters]
@@ -109,10 +109,10 @@ class ReSTSerializerVisitor(NodeVisitor):
     """
 
     def __init__(self) -> None:
-        self.output: List[str] = []
+        self.output: list[str] = []
         self._indent_level = 0
         self._current_list_depth = 0
-        self._footnotes: List[tuple[str | None, List[Any]]] = []
+        self._footnotes: list[tuple[str | None, list[Any]]] = []
         self._footnote_ids: set[str] = set()
 
     def serialize(self, node: Any) -> str:

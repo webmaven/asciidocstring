@@ -3,6 +3,25 @@
 
 This document details all notable changes and releases for `asciidocstring`.
 
+
+== [0.1.0a10] - 2026-09-12
+
+=== Added
+* **`DocstringParam.is_required`** (Issue https://github.com/webmaven/asciidocstring/issues/6[#6]): `DocstringParam` now carries an `is_required` boolean field. Parameters without a default value are marked as required; parameters with defaults or marked `optional` are not.
+* **`VersionDoc`, `DeprecationDoc`, `version_added`, `version_changed`, `deprecated_role`, `is_experimental`** (Issue https://github.com/webmaven/asciidocstring/issues/7[#7]): Added structured `VersionDoc` and `DeprecationDoc` dataclasses and corresponding `version_added`, `version_changed`, `deprecated_role`, and `is_experimental` properties on `AsciiDocStringDocument` for full version lifecycle tracking directly from docstrings.
+
+=== Fixed
+* **Robust `_extract_replacement` regex**: Added word-boundary anchoring and an extensible stopword filter (`"the"`, `"a"`, `"an"`, `"new"`) that prevents common article-like prefixes from polluting extracted replacement type strings.
+* **AST attribute negation normalisation**: `_handle_attribute_role` now strips leading and trailing `!` characters from attribute role names (e.g. `!deprecated!`, `!experimental`) before lookup, ensuring negated AsciiDoc roles are correctly resolved.
+
+=== Build / CI
+* **Hatchling uncapped**: Removed upper-bound pin on `hatchling` in `pyproject.toml` to track upstream releases.
+* **Hatch scripts**: Added `[tool.hatch.envs.default.scripts]` entries for `test`, `lint`, `format`, and `typecheck` convenience targets.
+* **`pylock.toml`**: Added PEP 751 reproducibility lockfile.
+* **GitHub Actions CI**: Added `.github/workflows/ci.yml` running pytest (with 100% coverage enforcement), ruff, and mypy on push/PR.
+* **Ruff UP + B rules**: Enabled `pyupgrade` (UP) and `flake8-bugbear` (B) rulesets and applied all auto-fixes.
+* **Pre-commit config**: Added `.pre-commit-config.yaml` running ruff format + lint and mypy on staged files.
+
 == [0.1.0a9] - 2026-09-04
 
 === Added

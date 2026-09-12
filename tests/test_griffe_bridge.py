@@ -187,3 +187,43 @@ def test_griffe_named_returns_and_yields() -> None:
     assert doc.yields[0].type_name == "bytes"
     assert doc.yields[0].description == "The next data chunk."
 
+
+def test_griffe_bridge_is_required_round_trip() -> None:
+    docstring_text = """
+    Test function.
+
+    Args:
+        req (str): A required parameter.
+        opt (int, optional): An optional parameter. Defaults to 42.
+    """
+    doc = from_griffe(docstring_text, style="google")
+    assert len(doc.parameters) == 2
+    assert doc.parameters[0].name == "req"
+    assert doc.parameters[0].is_required is True
+    assert doc.parameters[0].optional is False
+    assert doc.parameters[0].default is None
+
+    assert doc.parameters[1].name == "opt"
+    assert doc.parameters[1].is_required is False
+    assert doc.parameters[1].optional is True
+    assert doc.parameters[1].default == "42"
+
+    # Also test section serialization and round trip directly
+    param_req = griffe.DocstringParameter(
+        name="req", annotation="str", description="Required param."
+    )
+    param_opt = griffe.DocstringParameter(
+        name="opt", annotation="int", description="Optional param.", value="42"
+    )
+    sec = griffe.DocstringSectionParameters([param_req, param_opt])
+    doc_sections = from_sections([sec])
+    assert len(doc_sections.parameters) == 2
+    assert doc_sections.parameters[0].name == "req"
+    assert doc_sections.parameters[0].is_required is True
+    assert doc_sections.parameters[0].optional is False
+
+    assert doc_sections.parameters[1].name == "opt"
+    assert doc_sections.parameters[1].is_required is False
+    assert doc_sections.parameters[1].optional is True
+
+

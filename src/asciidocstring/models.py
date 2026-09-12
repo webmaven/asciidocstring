@@ -18,6 +18,8 @@ class DocstringParam:
         Optional default value representation string. Defaults to `None`.
     `optional` (bool)::
         Whether the parameter is marked optional. Defaults to `False`.
+    `is_required` (bool)::
+        Whether the parameter is required. Defaults to `True`.
     `raw_entry` (Any, optional)::
         Optional raw parsed AST node or term reference. Defaults to `None`.
     """
@@ -27,6 +29,7 @@ class DocstringParam:
     description: str = ""
     default: str | None = None
     optional: bool = False
+    is_required: bool = True
     raw_entry: Any | None = None
 
 
@@ -144,7 +147,7 @@ class DocstringAttribute:
 
 @dataclass
 class DocstringDeprecated:
-    """Represent a deprecation notice.
+    """Represent a deprecation notice from a [deprecated] admonition block.
 
     [attributes]
     `version` (str, optional)::
@@ -155,6 +158,40 @@ class DocstringDeprecated:
 
     version: str | None = None
     reason: str = ""
+
+
+@dataclass
+class VersionDoc:
+    """Represent a version added or changed annotation.
+
+    [attributes]
+    `version` (str)::
+        Version identifier.
+    `note` (str, optional)::
+        Optional descriptive note or rationale. Defaults to `None`.
+    """
+
+    version: str
+    note: str | None = None
+
+
+@dataclass
+class DeprecationDoc:
+    """Represent a deprecation role annotation from a :deprecated: attribute entry.
+
+    [attributes]
+    `since` (str)::
+        Version in which the feature was deprecated.
+    `replacement` (str, optional)::
+        Optional suggested replacement symbol or function. Defaults to `None`.
+    `note` (str, optional)::
+        Optional migration guidance or additional note. Defaults to `None`.
+    """
+
+    since: str
+    replacement: str | None = None
+    note: str | None = None
+
 
 
 @dataclass

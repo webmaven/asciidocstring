@@ -2,78 +2,36 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: ["main", "feat/**", "fix/**"]
   pull_request:
-    branches: [ main ]
+    branches: ["main"]
 
 jobs:
-  lint:
-    name: Lint & Type Check
+  test:
+    name: Test (Python 3.14)
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.14"]
 
-      - name: Set up Python 3.14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
-          cache: "pip"
+          python-version: 3.14
+          allow-prereleases: true
 
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .[lint]
+      - name: Install dependencies
+        run: pip install -e ".[test,lint,griffe]"
 
-      - name: Run Ruff
+      - name: Lint (ruff)
         run: ruff check src/ tests/
 
-      - name: Run MyPy
+      - name: Type-check (mypy)
         run: mypy src/
 
-  test:
-    name: Test Suite (Python 3.14)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-          cache: "pip"
-
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .[test]
-
-      - name: Run Pytest & Measure Coverage
-        run: |
-          PYTHONPATH=src pytest --cov=src --cov-report=term-missing
-
-  build:
-    name: Build & Verify Package Distribution
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-          cache: "pip"
-
-      - name: Install Build and Twine Tools
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install build twine
-
-      - name: Build Package
-        run: python -m build
-
-      - name: Check Package Distribution
-        run: twine check dist/*
-
+      - name: Test with coverage
+        run: PYTHONPATH=src pytest --cov=src --cov-report=term-missing --cov-fail-under=100

@@ -6,6 +6,7 @@ import pytest
 
 import asciidocstring
 from asciidocstring.models import (
+    DeprecationDoc,
     DocstringAttribute,
     DocstringDeprecated,
     DocstringExample,
@@ -15,6 +16,7 @@ from asciidocstring.models import (
     DocstringReturn,
     DocstringWarn,
     DocstringYield,
+    VersionDoc,
 )
 
 ALL_MODELS = [
@@ -27,6 +29,8 @@ ALL_MODELS = [
     DocstringAttribute,
     DocstringDeprecated,
     DocstringExample,
+    VersionDoc,
+    DeprecationDoc,
 ]
 
 
@@ -60,6 +64,7 @@ def test_docstring_param_docstring() -> None:
     assert "`description` (str)::" in doc
     assert "`default` (str, optional)::" in doc
     assert "`optional` (bool, optional)::" in doc or "`optional` (bool)::" in doc
+    assert "`is_required` (bool, optional)::" in doc or "`is_required` (bool)::" in doc
     assert "`raw_entry` (Any, optional)::" in doc
 
     parsed = asciidocstring.parse(doc)
@@ -70,8 +75,10 @@ def test_docstring_param_docstring() -> None:
         "description",
         "default",
         "optional",
+        "is_required",
         "raw_entry",
     ]
+
 
 
 def test_docstring_return_docstring() -> None:
@@ -188,3 +195,29 @@ def test_docstring_example_docstring() -> None:
         "is_interactive",
         "attributes",
     ]
+
+
+def test_version_doc_docstring() -> None:
+    doc = inspect.getdoc(VersionDoc)
+    assert doc is not None
+    assert "[attributes]" in doc
+    assert "`version` (str)::" in doc
+    assert "`note` (str, optional)::" in doc
+
+    parsed = asciidocstring.parse(doc)
+    attr_names = [a.name for a in parsed.attributes]
+    assert attr_names == ["version", "note"]
+
+
+def test_deprecation_doc_docstring() -> None:
+    doc = inspect.getdoc(DeprecationDoc)
+    assert doc is not None
+    assert "[attributes]" in doc
+    assert "`since` (str)::" in doc
+    assert "`replacement` (str, optional)::" in doc
+    assert "`note` (str, optional)::" in doc
+
+    parsed = asciidocstring.parse(doc)
+    attr_names = [a.name for a in parsed.attributes]
+    assert attr_names == ["since", "replacement", "note"]
+

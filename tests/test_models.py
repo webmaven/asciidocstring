@@ -1,4 +1,5 @@
 from asciidocstring.models import (
+    DeprecationDoc,
     DocstringAttribute,
     DocstringDeprecated,
     DocstringExample,
@@ -8,6 +9,7 @@ from asciidocstring.models import (
     DocstringReturn,
     DocstringWarn,
     DocstringYield,
+    VersionDoc,
 )
 
 
@@ -113,3 +115,41 @@ def test_testblock_and_docstring_example_harmonization() -> None:
     assert not tb.is_interactive
     assert tb.attributes == {"style": "source"}
 
+
+def test_docstring_param_is_required_field() -> None:
+    # Default constructor fallback without Griffe context
+    p_default = DocstringParam(name="x")
+    assert p_default.is_required is True
+
+    # Explicit constructor arguments
+    p_req = DocstringParam(name="y", is_required=True)
+    assert p_req.is_required is True
+
+    p_opt = DocstringParam(name="z", is_required=False)
+    assert p_opt.is_required is False
+
+
+def test_version_doc_dataclass() -> None:
+    v1 = VersionDoc(version="1.2.0")
+    assert v1.version == "1.2.0"
+    assert v1.note is None
+
+    v2 = VersionDoc(version="1.3.0", note="Added async compilation.")
+    assert v2.version == "1.3.0"
+    assert v2.note == "Added async compilation."
+
+
+def test_deprecation_doc_dataclass() -> None:
+    d1 = DeprecationDoc(since="2.0.0")
+    assert d1.since == "2.0.0"
+    assert d1.replacement is None
+    assert d1.note is None
+
+    d2 = DeprecationDoc(
+        since="2.0.0",
+        replacement="new_func()",
+        note="Will be removed in 3.0.0.",
+    )
+    assert d2.since == "2.0.0"
+    assert d2.replacement == "new_func()"
+    assert d2.note == "Will be removed in 3.0.0."

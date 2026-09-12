@@ -45,3 +45,7 @@ venv.bak/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Scratch / generated files
+docs/
+loc-nar.py
