@@ -875,8 +875,8 @@ def test_embedded_attribute_entry_in_paragraph() -> None:
                 value=(
                     "Leading paragraph text.\n"
                     ":versionadded: 1.2.0\n"
-                    "Feature note.\n"
-                    "Trailing text."
+                    "Feature note line 1.\n"
+                    "Feature note line 2."
                 )
             )
         ]
@@ -885,7 +885,209 @@ def test_embedded_attribute_entry_in_paragraph() -> None:
     visitor.visit_paragraph(para)
     assert visitor.version_added is not None
     assert visitor.version_added.version == "1.2.0"
-    assert visitor.version_added.note == "Feature note."
-    assert visitor._leading_paragraphs == ["Leading paragraph text.\nTrailing text."]
+    assert (
+        visitor.version_added.note == "Feature note line 1. Feature note line 2."
+    )
+    assert visitor._leading_paragraphs == ["Leading paragraph text."]
+
+
+def test_extract_replacement_word_boundary_and_patterns() -> None:
+    """Verify word boundary and pattern matching in replacement extraction."""
+    from asciidocstring.semantics import _extract_replacement
+
+    # Words containing "use" like "because" must not trigger false positives
+    assert _extract_replacement("Deprecated because of security reasons.") is None
+    assert (
+        _extract_replacement(
+            "Deprecated because reasons. Use the new_func() instead."
+        )
+        == "new_func()"
+    )
+
+    # Optional "the " before replacement symbol
+    assert _extract_replacement("Use the new_api() instead.") == "new_api()"
+    assert (
+        _extract_replacement("Replaced by the `my_pkg.mod.func()`.")
+        == "my_pkg.mod.func()"
+    )
+    assert _extract_replacement("Superseded by the new_tool instead.") == "new_tool"
+
+    # Stopwords like "with", "for", "in", "of", "the" must not be extracted
+    assert _extract_replacement("Use with caution.") is None
+    assert _extract_replacement("Use for debugging only.") is None
+    assert _extract_replacement("Use in production environments.") is None
+    assert _extract_replacement("Use of legacy API is deprecated.") is None
+    assert (
+        _extract_replacement("Use with caution. Use `new_api()` instead.")
+        == "new_api()"
+    )
+
+    # Restrict extracted symbol to valid identifiers/callables
+    assert _extract_replacement("Use `async_exec()` instead.") == "async_exec()"
+    assert _extract_replacement("Use async_exec instead.") == "async_exec"
+    assert _extract_replacement("replacement: new_helper.") == "new_helper"
+    assert _extract_replacement("Use 12345 instead.") is None
+    assert _extract_replacement("Use () instead.") is None
+
+
+def test_deprecated_role_with_because_and_the() -> None:
+    """Verify deprecated role parsing with because and 'Use the ...' patterns."""
+    doc_because = asciidocstring.parse("""
+    Function deprecated for safety.
+
+    :deprecated: 2.1.0 Deprecated because of critical vulnerability.
+    """)
+    assert doc_because.deprecated_role is not None
+    assert doc_because.deprecated_role.since == "2.1.0"
+    assert doc_because.deprecated_role.replacement is None
+    assert (
+        doc_because.deprecated_role.note
+        == "Deprecated because of critical vulnerability."
+    )
+
+    doc_the = asciidocstring.parse("""
+    Function with replacement.
+
+    :deprecated: 2.1.0
+    Use the `better_func()` instead.
+    """)
+    assert doc_the.deprecated_role is not None
+    assert doc_the.deprecated_role.since == "2.1.0"
+    assert doc_the.deprecated_role.replacement == "better_func()"
+    assert doc_the.deprecated_role.note == "Use the better_func() instead."
+
+
+def test_non_role_and_experimental_contiguous_paragraph_not_consumed() -> None:
+    """Verify contiguous paragraphs not consumed for non-roles or experimental."""
+    doc_author = asciidocstring.parse("""
+    :author: Jane Doe
+    This is the first paragraph summary.
+
+    This is the detailed description.
+    """)
+    assert doc_author.summary == "This is the first paragraph summary."
+    assert doc_author.description == (
+        "This is the first paragraph summary.\n\nThis is the detailed description."
+    )
+
+    doc_experimental = asciidocstring.parse("""
+    :experimental:
+    This is an experimental calculation function.
+
+    Detailed explanation of experimental algorithm.
+    """)
+    assert doc_experimental.is_experimental is True
+    assert (
+        doc_experimental.summary == "This is an experimental calculation function."
+    )
+    assert doc_experimental.description == (
+        "This is an experimental calculation function.\n\n"
+        "Detailed explanation of experimental algorithm."
+    )
+
+
+def test_leading_attribute_entries_preserve_summary_and_description() -> None:
+    """Verify leading attribute entries preserve summary and description."""
+    doc_versionadded = asciidocstring.parse("""
+    :versionadded: 1.0.0
+
+    Summary of the newly added function.
+
+    Detailed description paragraph explaining the feature.
+    """)
+    assert doc_versionadded.version_added is not None
+    assert doc_versionadded.version_added.version == "1.0.0"
+    assert doc_versionadded.summary == "Summary of the newly added function."
+    assert doc_versionadded.description == (
+        "Summary of the newly added function.\n\n"
+        "Detailed description paragraph explaining the feature."
+    )
+
+    doc_deprecated = asciidocstring.parse("""
+    :deprecated: 3.0.0
+    Use the new_handler() instead.
+
+    Summary of the obsolete function.
+
+    Full description explaining why this was deprecated.
+    """)
+    assert doc_deprecated.deprecated_role is not None
+    assert doc_deprecated.deprecated_role.since == "3.0.0"
+    assert doc_deprecated.deprecated_role.replacement == "new_handler()"
+    assert doc_deprecated.deprecated_role.note == "Use the new_handler() instead."
+    assert doc_deprecated.summary == "Summary of the obsolete function."
+    assert doc_deprecated.description == (
+        "Summary of the obsolete function.\n\n"
+        "Full description explaining why this was deprecated."
+    )
+
+
+def test_embedded_experimental_and_negation_in_paragraph() -> None:
+    """Verify embedded experimental and negation syntax in paragraph."""
+    from asciidoctrine.nodes import Paragraph, Text
+
+    from asciidocstring.semantics import SemanticExtractorVisitor
+
+    # :experimental: embedded does not consume trailing text as note
+    para_exp = Paragraph(
+        inlines=[
+            Text(
+                value=(
+                    "Leading text.\n"
+                    ":experimental:\n"
+                    "Trailing text."
+                )
+            )
+        ]
+    )
+    vis_exp = SemanticExtractorVisitor()
+    vis_exp.visit_paragraph(para_exp)
+    assert vis_exp.is_experimental is True
+    assert vis_exp._leading_paragraphs == ["Leading text.\nTrailing text."]
+
+    # :!experimental: embedded negation
+    para_neg1 = Paragraph(
+        inlines=[Text(value="Leading text.\n:!experimental:\nTrailing text.")]
+    )
+    vis_neg1 = SemanticExtractorVisitor()
+    vis_neg1.visit_paragraph(para_neg1)
+    assert vis_neg1.is_experimental is False
+    assert vis_neg1._leading_paragraphs == ["Leading text.\nTrailing text."]
+
+    # :experimental!: embedded negation
+    para_neg2 = Paragraph(
+        inlines=[Text(value="Leading text.\n:experimental!:\nTrailing text.")]
+    )
+    vis_neg2 = SemanticExtractorVisitor()
+    vis_neg2.visit_paragraph(para_neg2)
+    assert vis_neg2.is_experimental is False
+    assert vis_neg2._leading_paragraphs == ["Leading text.\nTrailing text."]
+
+    # Consecutive embedded attribute entries break note collection cleanly
+    para_consec = Paragraph(
+        inlines=[
+            Text(
+                value=(
+                    "Leading text.\n"
+                    ":versionadded: 1.0.0\n"
+                    "Note for versionadded.\n"
+                    ":versionchanged: 1.1.0\n"
+                    "Note for versionchanged."
+                )
+            )
+        ]
+    )
+    vis_consec = SemanticExtractorVisitor()
+    vis_consec.visit_paragraph(para_consec)
+    assert vis_consec.version_added is not None
+    assert vis_consec.version_added.version == "1.0.0"
+    assert vis_consec.version_added.note == "Note for versionadded."
+    assert len(vis_consec.version_changed) == 1
+    assert vis_consec.version_changed[0].version == "1.1.0"
+    assert vis_consec.version_changed[0].note == "Note for versionchanged."
+    assert vis_consec._leading_paragraphs == ["Leading text."]
+
+
+
 
 

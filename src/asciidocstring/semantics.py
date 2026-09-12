@@ -30,18 +30,72 @@ from .models import (
     VersionDoc,
 )
 
+_REPLACEMENT_STOPWORDS: frozenset[str] = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "as",
+        "at",
+        "by",
+        "caution",
+        "for",
+        "from",
+        "in",
+        "instead",
+        "is",
+        "it",
+        "not",
+        "of",
+        "on",
+        "or",
+        "that",
+        "the",
+        "this",
+        "to",
+        "with",
+    }
+)
+
+
+def _is_valid_symbol(symbol: str) -> bool:
+    """Check if symbol is a valid dotted identifier or callable.
+
+    [parameters]
+    `symbol` (str):: Candidate symbol text to validate.
+
+    [returns]
+    `bool`:: True if the candidate is a valid identifier or callable.
+    """
+    parts = symbol.removesuffix("()").split(".")
+    return bool(parts) and all(p.isidentifier() for p in parts)
+
+
 
 def _extract_replacement(note: str) -> str | None:
-    """Extract replacement symbol or function from deprecation note."""
-    match = re.search(
-        r"(?:use|replaced by|superseded by|replacement[:=])"
-        r"\s+`?([^`\s,]+)`?(?:\s+instead)?",
+    """Extract replacement symbol or function from deprecation note.
+
+    [parameters]
+    `note` (str):: Note text to search for replacement indications.
+
+    [returns]
+    `str | None`:: Extracted replacement identifier or callable if found.
+    """
+    for match in re.finditer(
+        r"\b(?:use|replaced by|superseded by|replacement[:=])"
+        r"\s+(?:the\s+)?`?([a-zA-Z0-9_.]+(?:\(\))?)`?",
         note,
         re.IGNORECASE,
-    )
-    if match:
-        return match.group(1).strip().rstrip(".,;:")
+    ):
+        candidate = match.group(1).strip().rstrip(".,;:")
+        if (
+            candidate.lower() not in _REPLACEMENT_STOPWORDS
+            and _is_valid_symbol(candidate)
+        ):
+            return candidate
     return None
+
+
 
 
 
@@ -399,9 +453,16 @@ class SemanticExtractorVisitor(NodeVisitor):
     def _handle_attribute_role(
         self, name: str, val: str, note: str | None = None
     ) -> None:
-        """Process an attribute entry role such as versionadded, deprecated, etc."""
+        """Process an attribute entry role such as versionadded, deprecated, etc.
+
+        [parameters]
+        `name` (str):: Lowercase attribute name.
+        `val` (str):: Inline attribute value.
+        `note` (str | None, optional):: Optional contiguous block note.
+        """
         if name in ("versionadded", "versionchanged", "deprecated", "experimental"):
-            self._seen_semantic_block = True
+            if self._leading_paragraphs:
+                self._seen_semantic_block = True
 
         if name == "versionadded":
             parts = val.split(None, 1)
@@ -438,7 +499,12 @@ class SemanticExtractorVisitor(NodeVisitor):
                 self.is_experimental = True
 
     def _process_blocks(self, blocks: list[Any], **kwargs: Any) -> None:
-        """Process blocks, associating contiguous notes with attribute entries."""
+        """Process blocks, associating contiguous notes with attribute entries.
+
+        [parameters]
+        `blocks` (list[Any]):: Block AST nodes to traverse.
+        `kwargs` (Any):: Forwarded keyword arguments.
+        """
         consumed_indices: set[int] = set()
         for i, block in enumerate(blocks):
             if i in consumed_indices:
@@ -449,7 +515,10 @@ class SemanticExtractorVisitor(NodeVisitor):
                 name = getattr(block, "attribute_name", "").lower()
                 val = str(getattr(block, "value", "") or "").strip()
                 note: str | None = None
-                if i + 1 < len(blocks):
+                if (
+                    name in ("versionadded", "versionchanged", "deprecated")
+                    and i + 1 < len(blocks)
+                ):
                     next_block = blocks[i + 1]
                     if getattr(next_block, "name", "") == "paragraph" and isinstance(
                         next_block, Paragraph
@@ -493,6 +562,11 @@ class SemanticExtractorVisitor(NodeVisitor):
         return DocstringDeprecated(version=version, reason=reason)
 
     def visit_paragraph(self, node: Paragraph) -> None:
+        """Visit a paragraph node to extract deprecations and leading summaries.
+
+        [parameters]
+        `node` (Paragraph):: Paragraph node to inspect and extract.
+        """
         role = self._get_block_role(node) or self._current_role
         if role == "deprecated":
             self._seen_semantic_block = True
@@ -508,14 +582,22 @@ class SemanticExtractorVisitor(NodeVisitor):
         while i < len(lines):
             line = lines[i]
             stripped = line.strip()
-            attr_match = re.match(r"^:([a-zA-Z0-9_-]+):(?:\s*(.*))?$", stripped)
+            attr_match = re.match(
+                r"^:(!)?([a-zA-Z0-9_-]+)(!)?:(?:\s*(.*))?$", stripped
+            )
             if attr_match:
-                attr_name = attr_match.group(1).lower()
-                attr_val = (attr_match.group(2) or "").strip()
-                note = None
-                if i + 1 < len(lines) and not lines[i + 1].strip().startswith(":"):
-                    note = lines[i + 1].strip()
-                    i += 1
+                is_negated = bool(attr_match.group(1) or attr_match.group(3))
+                attr_name = attr_match.group(2).lower()
+                attr_val = "!" if is_negated else (attr_match.group(4) or "").strip()
+                note_parts: list[str] = []
+                if attr_name in ("versionadded", "versionchanged", "deprecated"):
+                    while i + 1 < len(lines):
+                        next_line = lines[i + 1].strip()
+                        if re.match(r"^:(!)?([a-zA-Z0-9_-]+)(!)?:", next_line):
+                            break
+                        note_parts.append(next_line)
+                        i += 1
+                note = " ".join(note_parts) if note_parts else None
                 self._handle_attribute_role(attr_name, attr_val, note)
             else:
                 remaining_lines.append(line)
