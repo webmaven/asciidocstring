@@ -1089,5 +1089,38 @@ def test_embedded_experimental_and_negation_in_paragraph() -> None:
 
 
 
+def test_extract_replacement_new_is_stopword() -> None:
+    """'new' must not be extracted as a replacement symbol."""
+    doc = asciidocstring.parse("""
+    Old function.
 
+    :deprecated: 1.0.0 Use the new func() instead.
+    """)
+    assert doc.semantics.deprecated_role is not None
+    assert doc.semantics.deprecated_role.since == "1.0.0"
+    # "new" is a stopword; the real symbol "func()" must be extracted
+    assert doc.semantics.deprecated_role.replacement == "func()"
+
+
+def test_handle_attribute_role_ast_negation_leading_bang() -> None:
+    """AST AttributeEntry with attribute_name='!experimental' is normalised."""
+    from asciidocstring.semantics import SemanticExtractorVisitor
+
+    vis = SemanticExtractorVisitor()
+    vis._leading_paragraphs = ["Some summary."]  # noqa: SLF001
+    # Simulate what asciidoctrine may produce for :!experimental:
+    vis._handle_attribute_role("!experimental", "")  # noqa: SLF001
+    assert vis.is_experimental is False
+
+
+def test_handle_attribute_role_ast_negation_trailing_bang() -> None:
+    """AST AttributeEntry with attribute_name='experimental!' is normalised."""
+    from asciidocstring.semantics import SemanticExtractorVisitor
+
+    vis = SemanticExtractorVisitor()
+    vis.is_experimental = True
+    vis._leading_paragraphs = ["Some summary."]  # noqa: SLF001
+    # Simulate what asciidoctrine may produce for :experimental!:
+    vis._handle_attribute_role("experimental!", "")  # noqa: SLF001
+    assert vis.is_experimental is False
 

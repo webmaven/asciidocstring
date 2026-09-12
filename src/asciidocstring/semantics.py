@@ -45,6 +45,7 @@ _REPLACEMENT_STOPWORDS: frozenset[str] = frozenset(
         "instead",
         "is",
         "it",
+        "new",
         "not",
         "of",
         "on",
@@ -83,7 +84,7 @@ def _extract_replacement(note: str) -> str | None:
     """
     for match in re.finditer(
         r"\b(?:use|replaced by|superseded by|replacement[:=])"
-        r"\s+(?:the\s+)?`?([a-zA-Z0-9_.]+(?:\(\))?)`?",
+        r"\s+(?:(?:the|a|an|new)\s+)*`?([a-zA-Z0-9_.]+(?:\(\))?)`?",
         note,
         re.IGNORECASE,
     ):
@@ -460,6 +461,14 @@ class SemanticExtractorVisitor(NodeVisitor):
         `val` (str):: Inline attribute value.
         `note` (str | None, optional):: Optional contiguous block note.
         """
+        # Normalise AsciiDoc negation: :!attr: → name="!attr", :attr!: → name="attr!"
+        if name.startswith("!"):
+            name = name[1:]
+            val = "!"
+        elif name.endswith("!"):
+            name = name[:-1]
+            val = "!"
+
         if name in ("versionadded", "versionchanged", "deprecated", "experimental"):
             if self._leading_paragraphs:
                 self._seen_semantic_block = True
