@@ -58,6 +58,12 @@ path = "src/asciidocstring/__init__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["src/asciidocstring"]
 
+[tool.hatch.envs.default.scripts]
+test = "PYTHONPATH=src pytest --cov=src --cov-report=term-missing {args}"
+lint = "ruff check src/ tests/"
+format = "ruff format src/ tests/"
+typecheck = "mypy src/"
+
 [tool.ruff]
 line-length = 88
 target-version = "py313"  # Ruff supports target version up to current stable
