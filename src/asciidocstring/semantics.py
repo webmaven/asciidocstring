@@ -230,14 +230,18 @@ class SemanticExtractorVisitor(NodeVisitor):
                 default_match.group(1) or default_match.group(2) or ""
             ).rstrip(".").strip()
 
+        is_required = default_val is None and not optional
+
         return DocstringParam(
             name=name,
             type_name=type_name,
             description=desc,
             default=default_val,
             optional=optional or (default_val is not None),
+            is_required=is_required,
             raw_entry=raw_entry,
         )
+
 
     def _parse_return_term(
         self, term_text: str, desc_text: str, raw_entry: Any = None

@@ -18,6 +18,8 @@ class DocstringParam:
         Optional default value representation string. Defaults to `None`.
     `optional` (bool)::
         Whether the parameter is marked optional. Defaults to `False`.
+    `is_required` (bool)::
+        Whether the parameter is required. Defaults to `True`.
     `raw_entry` (Any, optional)::
         Optional raw parsed AST node or term reference. Defaults to `None`.
     """
@@ -27,6 +29,7 @@ class DocstringParam:
     description: str = ""
     default: str | None = None
     optional: bool = False
+    is_required: bool = True
     raw_entry: Any | None = None
 
 

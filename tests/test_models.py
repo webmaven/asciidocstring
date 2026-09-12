@@ -113,3 +113,17 @@ def test_testblock_and_docstring_example_harmonization() -> None:
     assert not tb.is_interactive
     assert tb.attributes == {"style": "source"}
 
+
+def test_docstring_param_is_required_field() -> None:
+    # Default constructor fallback without Griffe context
+    p_default = DocstringParam(name="x")
+    assert p_default.is_required is True
+
+    # Explicit constructor arguments
+    p_req = DocstringParam(name="y", is_required=True)
+    assert p_req.is_required is True
+
+    p_opt = DocstringParam(name="z", is_required=False)
+    assert p_opt.is_required is False
+
+

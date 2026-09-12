@@ -60,6 +60,7 @@ def test_docstring_param_docstring() -> None:
     assert "`description` (str)::" in doc
     assert "`default` (str, optional)::" in doc
     assert "`optional` (bool, optional)::" in doc or "`optional` (bool)::" in doc
+    assert "`is_required` (bool, optional)::" in doc or "`is_required` (bool)::" in doc
     assert "`raw_entry` (Any, optional)::" in doc
 
     parsed = asciidocstring.parse(doc)
@@ -70,8 +71,10 @@ def test_docstring_param_docstring() -> None:
         "description",
         "default",
         "optional",
+        "is_required",
         "raw_entry",
     ]
+
 
 
 def test_docstring_return_docstring() -> None:

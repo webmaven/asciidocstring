@@ -587,5 +587,43 @@ def test_split_types_helper() -> None:
     ]
 
 
+def test_param_is_required_no_default() -> None:
+    docstring = """
+    Test required param without default.
+
+    [parameters]
+    `req_param` (int):: A required parameter.
+    """
+    doc = asciidocstring.parse(docstring)
+    assert len(doc.parameters) == 1
+    assert doc.parameters[0].name == "req_param"
+    assert doc.parameters[0].default is None
+    assert doc.parameters[0].is_required is True
+
+
+def test_param_is_required_with_default() -> None:
+    docstring = """
+    Test param with default and optional param.
+
+    [parameters]
+    `with_default` (int):: Param with default. Defaults to 42.
+    `is_optional` (str, optional):: Optional param without default.
+    """
+    doc = asciidocstring.parse(docstring)
+    assert len(doc.parameters) == 2
+
+    assert doc.parameters[0].name == "with_default"
+    assert doc.parameters[0].default == "42"
+    assert doc.parameters[0].optional is True
+    assert doc.parameters[0].is_required is False
+
+    assert doc.parameters[1].name == "is_optional"
+    assert doc.parameters[1].default is None
+    assert doc.parameters[1].optional is True
+    assert doc.parameters[1].is_required is False
+
+
+
+
 
 
