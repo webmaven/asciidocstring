@@ -8,6 +8,7 @@ from asciidoctrine import AsciiDocSyntaxError
 from asciidoctrine.lark_parser import parse_to_ast
 
 from .models import (
+    DeprecationDoc,
     DocstringAttribute,
     DocstringDeprecated,
     DocstringExample,
@@ -18,6 +19,7 @@ from .models import (
     DocstringWarn,
     DocstringYield,
     TestBlock,
+    VersionDoc,
 )
 from .visitors import ReSTSerializerVisitor, TestBlockExtractorVisitor
 
@@ -348,6 +350,55 @@ class AsciiDocStringDocument:
         if self._parse_failed:
             return None
         return self.semantics.deprecated
+
+    @property
+    def version_added(self) -> VersionDoc | None:
+        """Version in which the feature was added if documented, otherwise None.
+
+        [returns]
+        `VersionDoc | None`::
+            Version added annotation with version and optional note, or `None`.
+        """
+        if self._parse_failed:
+            return None
+        return self.semantics.version_added
+
+    @property
+    def version_changed(self) -> list[VersionDoc]:
+        """List of version change annotations documented for the feature.
+
+        [returns]
+        `list[VersionDoc]`::
+            Version change annotations with versions and optional notes.
+        """
+        if self._parse_failed:
+            return []
+        return self.semantics.version_changed
+
+    @property
+    def deprecated_role(self) -> DeprecationDoc | None:
+        """Deprecation role metadata from :deprecated: attribute entry, otherwise None.
+
+        [returns]
+        `DeprecationDoc | None`::
+            Deprecation role metadata with version, replacement, and note, or `None`.
+        """
+        if self._parse_failed:
+            return None
+        return self.semantics.deprecated_role
+
+    @property
+    def is_experimental(self) -> bool:
+        """Whether the feature is marked with an :experimental: role attribute.
+
+        [returns]
+        `bool`::
+            `True` if marked experimental, otherwise `False`.
+        """
+        if self._parse_failed:
+            return False
+        return self.semantics.is_experimental
+
 
 
 def parse(docstring: str, safe_mode: bool = False) -> AsciiDocStringDocument:

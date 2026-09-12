@@ -5,9 +5,11 @@ from typing import Any
 
 from asciidoctrine.nodes import (
     Admonition,
+    AttributeEntry,
     DescriptionList,
     Example,
     Listing,
+    Node,
     NodeVisitor,
     Open,
     Paragraph,
@@ -15,6 +17,7 @@ from asciidoctrine.nodes import (
 )
 
 from .models import (
+    DeprecationDoc,
     DocstringAttribute,
     DocstringDeprecated,
     DocstringExample,
@@ -24,7 +27,29 @@ from .models import (
     DocstringReturn,
     DocstringWarn,
     DocstringYield,
+    VersionDoc,
 )
+
+
+def _extract_replacement(note: str) -> str | None:
+    """Extract replacement symbol or function from deprecation note."""
+    match = re.search(
+        r"(?:use|replaced by|superseded by|replacement[:=])"
+        r"\s+`?([^`\s,]+)`?(?:\s+instead)?",
+        note,
+        re.IGNORECASE,
+    )
+    if match:
+        return match.group(1).strip().rstrip(".,;:")
+    return None
+
+
+
+def _combine_notes(inline: str | None, contiguous: str | None) -> str | None:
+    """Combine inline attribute note with contiguous block note."""
+    if inline and contiguous:
+        return f"{inline} {contiguous}"
+    return contiguous if contiguous is not None else inline
 
 
 def _split_types(type_str: str) -> list[str]:
@@ -69,6 +94,14 @@ class SemanticExtractorVisitor(NodeVisitor):
     `examples` (list[DocstringExample]):: Extracted code example blocks.
     `deprecated` (DocstringDeprecated | None, optional):: Extracted deprecation
       notice if present. Defaults to `None`.
+    `version_added` (VersionDoc | None, optional):: Version in which the feature
+      was added. Defaults to `None`.
+    `version_changed` (list[VersionDoc]):: List of versions and notes in which the
+      feature changed. Defaults to empty list.
+    `deprecated_role` (DeprecationDoc | None, optional):: Deprecation role metadata
+      from a :deprecated: attribute entry. Defaults to `None`.
+    `is_experimental` (bool):: Whether the feature is marked experimental.
+      Defaults to `False`.
 
     [source,python]
     ----
@@ -94,6 +127,14 @@ class SemanticExtractorVisitor(NodeVisitor):
         `examples` (list[DocstringExample]):: Example list initialized to empty.
         `deprecated` (DocstringDeprecated | None, optional):: Deprecation notice.
           Defaults to `None`.
+        `version_added` (VersionDoc | None, optional)::
+            Version added initialized to `None`.
+        `version_changed` (list[VersionDoc])::
+            Version changes initialized to empty list.
+        `deprecated_role` (DeprecationDoc | None, optional)::
+            Deprecation role initialized to `None`.
+        `is_experimental` (bool)::
+            Experimental flag initialized to `False`.
         """
         self.summary: str = ""
         self.description: str = ""
@@ -106,6 +147,10 @@ class SemanticExtractorVisitor(NodeVisitor):
         self.attributes: list[DocstringAttribute] = []
         self.examples: list[DocstringExample] = []
         self.deprecated: DocstringDeprecated | None = None
+        self.version_added: VersionDoc | None = None
+        self.version_changed: list[VersionDoc] = []
+        self.deprecated_role: DeprecationDoc | None = None
+        self.is_experimental: bool = False
         self._leading_paragraphs: list[str] = []
         self._seen_semantic_block: bool = False
         self._current_role: str = ""
@@ -351,6 +396,93 @@ class SemanticExtractorVisitor(NodeVisitor):
             raw_entry=raw_entry,
         )
 
+    def _handle_attribute_role(
+        self, name: str, val: str, note: str | None = None
+    ) -> None:
+        """Process an attribute entry role such as versionadded, deprecated, etc."""
+        if name in ("versionadded", "versionchanged", "deprecated", "experimental"):
+            self._seen_semantic_block = True
+
+        if name == "versionadded":
+            parts = val.split(None, 1)
+            version = parts[0] if parts else ""
+            inline_note = parts[1] if len(parts) > 1 else None
+            self.version_added = VersionDoc(
+                version=version, note=_combine_notes(inline_note, note)
+            )
+
+        elif name == "versionchanged":
+            parts = val.split(None, 1)
+            version = parts[0] if parts else ""
+            inline_note = parts[1] if len(parts) > 1 else None
+            self.version_changed.append(
+                VersionDoc(version=version, note=_combine_notes(inline_note, note))
+            )
+
+        elif name == "deprecated":
+            parts = val.split(None, 1)
+            since = parts[0] if parts else ""
+            inline_note = parts[1] if len(parts) > 1 else None
+            full_note = _combine_notes(inline_note, note)
+            replacement = _extract_replacement(full_note) if full_note else None
+            self.deprecated_role = DeprecationDoc(
+                since=since,
+                replacement=replacement,
+                note=full_note,
+            )
+
+        elif name == "experimental":
+            if val == "!" or val.lower() in ("false", "no", "off"):
+                self.is_experimental = False
+            else:
+                self.is_experimental = True
+
+    def _process_blocks(self, blocks: list[Any], **kwargs: Any) -> None:
+        """Process blocks, associating contiguous notes with attribute entries."""
+        consumed_indices: set[int] = set()
+        for i, block in enumerate(blocks):
+            if i in consumed_indices:
+                continue
+            if getattr(block, "name", "") == "attribute_entry" or isinstance(
+                block, AttributeEntry
+            ):
+                name = getattr(block, "attribute_name", "").lower()
+                val = str(getattr(block, "value", "") or "").strip()
+                note: str | None = None
+                if i + 1 < len(blocks):
+                    next_block = blocks[i + 1]
+                    if getattr(next_block, "name", "") == "paragraph" and isinstance(
+                        next_block, Paragraph
+                    ):
+                        loc_attr = getattr(block, "location", None)
+                        loc_next = getattr(next_block, "location", None)
+                        is_contiguous = bool(
+                            loc_attr
+                            and loc_next
+                            and loc_next[0]["line"] == loc_attr[-1]["line"] + 1
+                        )
+                        if is_contiguous:
+                            consumed_indices.add(i + 1)
+                            note = self._get_node_text(next_block).strip()
+                self._handle_attribute_role(name, val, note)
+            else:
+                self.visit(block, **kwargs)
+
+    def generic_visit(self, node: Node, **kwargs: Any) -> Any:
+        """Traverse child collections, handling attribute entries and blocks."""
+        for coll_name, coll in node.get_child_collections().items():
+            if coll_name == "blocks":
+                self._process_blocks(coll, **kwargs)
+            else:
+                for child in coll:
+                    self.visit(child, **kwargs)
+
+
+    def visit_attribute_entry(self, node: Any) -> None:
+        """Visit an individual AttributeEntry node."""
+        name = getattr(node, "attribute_name", "").lower()
+        val = str(getattr(node, "value", "") or "").strip()
+        self._handle_attribute_role(name, val, None)
 
     def _parse_deprecated_block(self, text: str) -> DocstringDeprecated:
         version = None
@@ -367,8 +499,30 @@ class SemanticExtractorVisitor(NodeVisitor):
             text = self._get_node_text(node)
             self.deprecated = self._parse_deprecated_block(text)
             return
-        text = self._get_node_text(node).strip()
-        if not self._seen_semantic_block and text:
+
+        was_seen = self._seen_semantic_block
+        raw_text = self._get_node_text(node)
+        lines = raw_text.splitlines()
+        remaining_lines: list[str] = []
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+            attr_match = re.match(r"^:([a-zA-Z0-9_-]+):(?:\s*(.*))?$", stripped)
+            if attr_match:
+                attr_name = attr_match.group(1).lower()
+                attr_val = (attr_match.group(2) or "").strip()
+                note = None
+                if i + 1 < len(lines) and not lines[i + 1].strip().startswith(":"):
+                    note = lines[i + 1].strip()
+                    i += 1
+                self._handle_attribute_role(attr_name, attr_val, note)
+            else:
+                remaining_lines.append(line)
+            i += 1
+
+        text = "\n".join(remaining_lines).strip()
+        if not was_seen and text:
             self._leading_paragraphs.append(text)
 
     def visit_descriptionlist(self, node: DescriptionList) -> None:

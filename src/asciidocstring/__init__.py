@@ -50,6 +50,7 @@ from .document import (
 )
 from .griffe_bridge import from_griffe, from_sections, to_asciidoc
 from .models import (
+    DeprecationDoc,
     DocstringAttribute,
     DocstringDeprecated,
     DocstringExample,
@@ -60,6 +61,7 @@ from .models import (
     DocstringWarn,
     DocstringYield,
     TestBlock,
+    VersionDoc,
 )
 
 __version__ = "0.1.0a9"
@@ -78,6 +80,8 @@ __all__ = [
     "DocstringReturn",
     "DocstringWarn",
     "DocstringYield",
+    "VersionDoc",
+    "DeprecationDoc",
     "from_griffe",
     "from_sections",
     "to_asciidoc",

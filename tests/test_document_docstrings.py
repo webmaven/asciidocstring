@@ -117,6 +117,10 @@ def test_asciidocstring_document_properties_docstrings() -> None:
         "attributes": ("`list[DocstringAttribute]`::", "list[DocstringAttribute]"),
         "examples": ("`list[DocstringExample]`::", "list[DocstringExample]"),
         "deprecated": ("`DocstringDeprecated | None`::", "DocstringDeprecated | None"),
+        "version_added": ("`VersionDoc | None`::", "VersionDoc | None"),
+        "version_changed": ("`list[VersionDoc]`::", "list[VersionDoc]"),
+        "deprecated_role": ("`DeprecationDoc | None`::", "DeprecationDoc | None"),
+        "is_experimental": ("`bool`::", "bool"),
     }
 
     for prop_name, (expected_term, expected_type) in properties_expected.items():

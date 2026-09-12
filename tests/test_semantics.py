@@ -623,7 +623,269 @@ def test_param_is_required_with_default() -> None:
     assert doc.parameters[1].is_required is False
 
 
+def test_versionadded_parsed() -> None:
+    docstring_simple = """
+    A simple function.
+
+    :versionadded: 1.2.0
+    """
+    doc1 = asciidocstring.parse(docstring_simple)
+    assert doc1.semantics.version_added is not None
+    assert doc1.semantics.version_added.version == "1.2.0"
+    assert doc1.semantics.version_added.note is None
+
+    docstring_with_next_line = """
+    A function with note.
+
+    :versionadded: 1.2.0
+    Added support for async compilation.
+    """
+    doc2 = asciidocstring.parse(docstring_with_next_line)
+    assert doc2.semantics.version_added is not None
+    assert doc2.semantics.version_added.version == "1.2.0"
+    assert doc2.semantics.version_added.note == "Added support for async compilation."
+    assert doc2.summary == "A function with note."
+    assert "Added support" not in doc2.description
+
+    docstring_same_line = """
+    A function with same-line note.
+
+    :versionadded: 1.2.0 Added support for async compilation.
+    """
+    doc3 = asciidocstring.parse(docstring_same_line)
+    assert doc3.semantics.version_added is not None
+    assert doc3.semantics.version_added.version == "1.2.0"
+    assert doc3.semantics.version_added.note == "Added support for async compilation."
 
 
+def test_deprecated_role_parsed() -> None:
+    docstring_with_rep = """
+    A deprecated function.
+
+    :deprecated: 2.0.0
+    Use async_compile instead.
+    """
+    doc1 = asciidocstring.parse(docstring_with_rep)
+    assert doc1.semantics.deprecated_role is not None
+    assert doc1.semantics.deprecated_role.since == "2.0.0"
+    assert doc1.semantics.deprecated_role.replacement == "async_compile"
+    assert doc1.semantics.deprecated_role.note == "Use async_compile instead."
+    assert doc1.summary == "A deprecated function."
+    assert "Use async_compile" not in doc1.description
+
+    docstring_backtick_rep = """
+    A function with backticks in replacement.
+
+    :deprecated: 2.0.0
+    Use `async_compile()` instead. Will be removed in 3.0.0.
+    """
+    doc2 = asciidocstring.parse(docstring_backtick_rep)
+    assert doc2.semantics.deprecated_role is not None
+    assert doc2.semantics.deprecated_role.since == "2.0.0"
+    assert doc2.semantics.deprecated_role.replacement == "async_compile()"
+    assert doc2.semantics.deprecated_role.note == (
+        "Use async_compile() instead. Will be removed in 3.0.0."
+    )
+
+    docstring_bare = """
+    Bare deprecation role.
+
+    :deprecated: 2.0.0
+    """
+    doc3 = asciidocstring.parse(docstring_bare)
+    assert doc3.semantics.deprecated_role is not None
+    assert doc3.semantics.deprecated_role.since == "2.0.0"
+    assert doc3.semantics.deprecated_role.replacement is None
+    assert doc3.semantics.deprecated_role.note is None
+
+    # Coexistence of :deprecated: role and [deprecated] block
+    docstring_coexistence = """
+    Function with both deprecation forms.
+
+    :deprecated: 2.0.0
+    Use `new_api()` instead.
+
+    [deprecated]
+    ====
+    Deprecated in version 2.0: Legacy synchronous caller.
+    ====
+    """
+    doc4 = asciidocstring.parse(docstring_coexistence)
+    assert doc4.semantics.deprecated_role is not None
+    assert doc4.semantics.deprecated_role.since == "2.0.0"
+    assert doc4.semantics.deprecated_role.replacement == "new_api()"
+    assert doc4.semantics.deprecated is not None
+    assert doc4.semantics.deprecated.version == "2.0"
+    assert "Legacy synchronous caller." in doc4.semantics.deprecated.reason
+
+
+def test_experimental_parsed() -> None:
+    docstring_bare = """
+    An experimental feature.
+
+    :experimental:
+    """
+    doc1 = asciidocstring.parse(docstring_bare)
+    assert doc1.semantics.is_experimental is True
+
+    docstring_true = """
+    Explicitly experimental.
+
+    :experimental: true
+    """
+    doc2 = asciidocstring.parse(docstring_true)
+    assert doc2.semantics.is_experimental is True
+
+    docstring_negated = """
+    Negated experimental.
+
+    :!experimental:
+    """
+    doc3 = asciidocstring.parse(docstring_negated)
+    assert doc3.semantics.is_experimental is False
+
+
+def test_versionchanged_multiple() -> None:
+    docstring = """
+    A function with multiple revisions.
+
+    :versionchanged: 1.1.0
+    Added foo support.
+    :versionchanged: 1.2.0 Added bar support.
+    :versionchanged: 1.3.0
+    """
+    doc = asciidocstring.parse(docstring)
+    assert len(doc.semantics.version_changed) == 3
+
+    assert doc.semantics.version_changed[0].version == "1.1.0"
+    assert doc.semantics.version_changed[0].note == "Added foo support."
+
+    assert doc.semantics.version_changed[1].version == "1.2.0"
+    assert doc.semantics.version_changed[1].note == "Added bar support."
+
+    assert doc.semantics.version_changed[2].version == "1.3.0"
+    assert doc.semantics.version_changed[2].note is None
+
+
+def test_absent_version_fields_are_none() -> None:
+    doc = asciidocstring.parse("""
+    A simple docstring with no version or deprecation roles.
+
+    [parameters]
+    `x` (int):: An integer.
+    """)
+    assert doc.semantics.version_added is None
+    assert doc.semantics.version_changed == []
+    assert doc.semantics.deprecated_role is None
+    assert doc.semantics.is_experimental is False
+
+
+def test_document_version_properties() -> None:
+    # Verify top-level exports
+    from asciidocstring import DeprecationDoc, VersionDoc
+    assert VersionDoc is not None
+    assert DeprecationDoc is not None
+
+    doc = asciidocstring.parse("""
+    Docstring with all version roles.
+
+    :versionadded: 1.0.0
+    Initial implementation.
+
+    :versionchanged: 1.1.0
+    Performance optimization.
+
+    :deprecated: 2.0.0
+    Use `new_func()` instead.
+
+    :experimental:
+    """)
+    assert doc.version_added is not None
+    assert doc.version_added.version == "1.0.0"
+    assert doc.version_added.note == "Initial implementation."
+
+    assert len(doc.version_changed) == 1
+    assert doc.version_changed[0].version == "1.1.0"
+    assert doc.version_changed[0].note == "Performance optimization."
+
+    assert doc.deprecated_role is not None
+    assert doc.deprecated_role.since == "2.0.0"
+    assert doc.deprecated_role.replacement == "new_func()"
+    assert doc.deprecated_role.note == "Use new_func() instead."
+
+    assert doc.is_experimental is True
+
+    # When roles absent
+    bare_doc = asciidocstring.parse("Plain docstring.")
+    assert bare_doc.version_added is None
+    assert bare_doc.version_changed == []
+    assert bare_doc.deprecated_role is None
+    assert bare_doc.is_experimental is False
+
+
+def test_deprecated_note_without_replacement() -> None:
+    doc = asciidocstring.parse("""
+    A deprecated function.
+
+    :deprecated: 2.0.0
+    This function is obsolete and will be deleted.
+    """)
+    assert doc.deprecated_role is not None
+    assert doc.deprecated_role.since == "2.0.0"
+    assert doc.deprecated_role.replacement is None
+    assert doc.deprecated_role.note == "This function is obsolete and will be deleted."
+
+
+def test_version_role_combined_inline_and_contiguous_notes() -> None:
+    doc = asciidocstring.parse("""
+    Function with combined notes.
+
+    :versionadded: 1.0.0 Initial implementation.
+    Extended in subsequent patch with additional capabilities.
+    """)
+    assert doc.version_added is not None
+    assert doc.version_added.version == "1.0.0"
+    assert doc.version_added.note == (
+        "Initial implementation. Extended in subsequent "
+        "patch with additional capabilities."
+    )
+
+
+def test_visit_attribute_entry_direct() -> None:
+    from asciidoctrine.nodes import AttributeEntry
+
+    from asciidocstring.semantics import SemanticExtractorVisitor
+
+    visitor = SemanticExtractorVisitor()
+    entry = AttributeEntry("versionadded", "1.5.0 Direct visit.")
+    visitor.visit_attribute_entry(entry)
+    assert visitor.version_added is not None
+    assert visitor.version_added.version == "1.5.0"
+    assert visitor.version_added.note == "Direct visit."
+
+
+def test_embedded_attribute_entry_in_paragraph() -> None:
+    from asciidoctrine.nodes import Paragraph, Text
+
+    from asciidocstring.semantics import SemanticExtractorVisitor
+
+    para = Paragraph(
+        inlines=[
+            Text(
+                value=(
+                    "Leading paragraph text.\n"
+                    ":versionadded: 1.2.0\n"
+                    "Feature note.\n"
+                    "Trailing text."
+                )
+            )
+        ]
+    )
+    visitor = SemanticExtractorVisitor()
+    visitor.visit_paragraph(para)
+    assert visitor.version_added is not None
+    assert visitor.version_added.version == "1.2.0"
+    assert visitor.version_added.note == "Feature note."
+    assert visitor._leading_paragraphs == ["Leading paragraph text.\nTrailing text."]
 
 
