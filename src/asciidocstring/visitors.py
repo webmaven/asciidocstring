@@ -265,6 +265,7 @@ class ReSTSerializerVisitor(NodeVisitor):
             self.visit(item)
 
         self._current_list_depth = old_depth
+        self._ensure_blank_line()
 
     def visit_listitem(self, node: Any) -> None:
         """Render list item formatting, preserving ordered vs unordered marker."""
