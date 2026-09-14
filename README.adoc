@@ -14,7 +14,7 @@ image:https://img.shields.io/badge/code%20style-ruff-000000.svg[Ruff, link=https
 image:https://img.shields.io/badge/types-mypy-blue.svg[MyPy, link=https://mypy-lang.org/]
 image:https://img.shields.io/badge/Pyodide-WASM%20Ready-6842B2.svg[Pyodide Compatible]
 
-A pure-Python semantic parser, extractor, and translator for Python docstrings written in AsciiDoc. Fully compatible with Python 3.14+ and WASM/Pyodide environments with zero native compiled extensions.
+A pure-Python semantic parser, extractor, and translator for Python docstrings written in AsciiDoc. Fully compatible with Python 3.10+ and WASM/Pyodide environments with zero native compiled extensions.
 
 == Key Features
 

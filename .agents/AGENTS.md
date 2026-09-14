@@ -13,7 +13,7 @@ Always write focused, failing tests first in the `tests/` directory before writi
 * Keep the test suite passing throughout.
 
 ### Rule 2: Pure Python and Portability
-We target **Python 3.14+** and **Pyodide (WASM) 314.0+**.
+We target **Python 3.10+** and **Pyodide (WASM) 314.0+**.
 * Do **NOT** add any dependencies with native C/C++ compiled extensions.
 * Ensure all code runs flawlessly in WASM environments.
 
