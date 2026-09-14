@@ -94,6 +94,25 @@ def test_ordered_lists_serialization() -> None:
     assert "* First step" not in rest
 
 
+def test_list_serialization_trailing_blank_line() -> None:
+    docstring = """
+        * item 1
+        * item 2
+
+        Paragraph following list.
+        """
+    doc = asciidocstring.parse(docstring)
+    rest = doc.to_rest()
+
+    expected = "* item 1\n* item 2\n\nParagraph following list."
+    assert expected in rest
+
+    import docutils.core
+    settings = {"warning_stream": None, "halt_level": 2}
+    # docutils should parse without WARNING/2 (Bullet list ends without a blank line)
+    docutils.core.publish_parts(rest, writer_name="html", settings_overrides=settings)
+
+
 def test_table_serialization() -> None:
     docstring = """
         .Sample Table
