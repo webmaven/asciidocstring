@@ -4,6 +4,12 @@
 This document details all notable changes and releases for `asciidocstring`.
 
 
+== [0.1.0a11] - 2026-09-13
+
+=== Fixed
+* **List Trailing Blank Line in reST Serialization** (Issue https://github.com/webmaven/asciidocstring/issues/9[#9]): `ReSTSerializerVisitor.visit_list` now calls `_ensure_blank_line()` upon list completion. This ensures bullet and ordered lists are separated by a blank line from following block elements (such as paragraphs or headers), preventing Docutils and Sphinx warnings (`Bullet list ends without a blank line; unexpected unindent.`).
+
+
 == [0.1.0a10] - 2026-09-12
 
 === Added
