@@ -327,7 +327,7 @@ def test_description_lists_edge_cases_and_coverage() -> None:
 
 
 def test_visit_list_trailing_blank_line_regression_issue_9() -> None:
-    from asciidoctrine.nodes import List, ListItem, Paragraph, Span, Text
+    from asciidoctrine.nodes import List, ListItem, Paragraph, Text
 
     from asciidocstring.visitors import ReSTSerializerVisitor
 
