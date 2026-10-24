@@ -3,6 +3,11 @@
 
 This document details all notable changes and releases for `asciidocstring`.
 
+== [Unreleased]
+
+=== Fixed
+
+* **Callout Annotations in Listing Blocks (Issue https://github.com/webmaven/asciidocstring/issues/10[#10])**: `ReSTSerializerVisitor.visit_listing` no longer raises `TypeError: unsupported operand type(s) for +: 'NoneType' and 'str'` when reST serialization encounters a listing block with callout annotations (`<1>`, `<2>`, ...). Callout markers are now rendered back into the reST output, preserving callout annotation round-trips through the parser.
 
 == [0.1.0a11] - 2026-09-13
 
