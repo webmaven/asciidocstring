@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from asciidoctrine.nodes import Listing, NodeVisitor
+from asciidoctrine.nodes import Callout, Listing, NodeVisitor
 
 from .models import TestBlock
 
@@ -78,7 +78,9 @@ class TestBlockExtractorVisitor(NodeVisitor):
 
             # Extract content from Text inline nodes
             content_parts = [
-                inline.value for inline in node.inlines if hasattr(inline, "value")
+                f"<{inline.value}>" if isinstance(inline, Callout) else inline.value
+                for inline in node.inlines
+                if hasattr(inline, "value")
             ]
             content = "".join(content_parts)
 

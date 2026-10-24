@@ -38,6 +38,25 @@ def test_source_listing_serialization() -> None:
     assert expected_block in rest
 
 
+def test_source_listing_with_callouts_serialization() -> None:
+    docstring = """
+        [source,python]
+        ----
+        import click<1>
+
+        @click.command()<2>
+        def hello(): pass
+        ----
+        <1> click import
+        <2> command decorator
+        """
+    doc = asciidocstring.parse(docstring)
+    rest = doc.to_rest()
+
+    assert "import click<1>" in rest
+    assert "@click.command()<2>" in rest
+
+
 def test_thematic_break_serialization() -> None:
     docstring = """
         Paragraph before.
