@@ -324,3 +324,26 @@ def test_description_lists_edge_cases_and_coverage() -> None:
     res = visitor.render_inline(UnknownNode())
     assert res == ""
 
+
+
+def test_visit_list_trailing_blank_line_regression_issue_9() -> None:
+    from asciidoctrine.nodes import List, ListItem, Paragraph, Span, Text
+
+    from asciidocstring.visitors import ReSTSerializerVisitor
+
+    visitor = ReSTSerializerVisitor()
+    lst = List(
+        variant="unordered",
+        marker="*",
+        items=[
+            ListItem(marker="*", principal=[Text(value="item 1")]),
+            ListItem(marker="*", principal=[Text(value="item 2")]),
+        ],
+    )
+    para = Paragraph(inlines=[Text(value="Next paragraph")])
+    visitor.output = []
+    visitor.visit_list(lst)
+    visitor.visit_paragraph(para)
+    out = "".join(visitor.output)
+    # A blank line must separate the last bullet from the following block
+    assert out.startswith("* item 1\n* item 2\n\nNext paragraph"), repr(out)
